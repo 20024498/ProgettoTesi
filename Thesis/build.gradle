@@ -16,9 +16,7 @@ repositories {
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
     
-     flatDir {
-        dirs 'libs'
-    }
+    
 }
 
 
@@ -35,6 +33,6 @@ dependencies {
     
     compile fileTree(include: ['*.jar'], dir: 'libs')
     
-}
+ 
     
 }
