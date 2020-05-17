@@ -15,7 +15,13 @@ repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    
+     flatDir {
+        dirs 'libs'
+    }
 }
+
+
 
 dependencies {
     // This dependency is exported to consumers, that is to say found on their compile classpath.
@@ -27,6 +33,8 @@ dependencies {
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     
-    // https://mvnrepository.com/artifact/com.github.haifengl/smile-core
-	compile group: 'com.github.haifengl', name: 'smile-core', version: '1.5.0'
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    
+}
+    
 }

@@ -6,7 +6,7 @@ package Thesis;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public class LibraryTest {
+public class MainTest {
     @Test public void testMain() {
         assertTrue(true);
     }
