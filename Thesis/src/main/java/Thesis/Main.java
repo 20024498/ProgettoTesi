@@ -1,6 +1,7 @@
 package Thesis;
 
 import java.awt.Color;
+import java.util.ArrayList;
 
 import smile.*;
 
@@ -20,10 +21,12 @@ public class Main {
 		code.append("clear \n\n");
 		
 		//variabili nascoste
+		ArrayList<Integer> hStates = new ArrayList<Integer>();
 		code.append("h_states = {");
 		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
 			
 			if(net.getNodeBgColor(h).equals(new Color(229,246,247))) {
+				hStates.add(h);
 				code.append(net.getNodeName(h));
 				code.append(", ");
 			}
@@ -35,10 +38,12 @@ public class Main {
 		code.append("};\n");
 		
 		//variabili osservabili
+		ArrayList<Integer> obs = new ArrayList<Integer>();
 		code.append("obs = {");
 		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
 			
 			if(!net.getNodeBgColor(h).equals(new Color(229,246,247))) {
+				obs.add(h);
 				code.append(net.getNodeName(h));
 				code.append(", ");
 			}
@@ -108,6 +113,11 @@ public class Main {
 		
 		//creazione rete bayesiana
 		code.append("bnet = mk_dbn(intra, inter, ns, 'names', names);\n\n");
+		
+		ArrayList<Integer> cpdNodes = new ArrayList<Integer>();
+		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
+			
+		}
 		
 		System.out.println(code.toString());	
 			
