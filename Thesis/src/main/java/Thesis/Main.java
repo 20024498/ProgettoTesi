@@ -12,9 +12,13 @@ public class Main {
 		//licenza
 		licenseInit();
 		
+		/*TODO LICENZA TRAMITE FILE*/
+		
 		//Inizializzazione rete
 		Network net = new Network();
 		net.readFile("net/rete.xdsl");
+		
+		/*TODO CONTROLLO ORDINE ARCHI*/
 		
 		//clear iniziale
 		StringBuilder code = new StringBuilder();
@@ -114,12 +118,71 @@ public class Main {
 		//creazione rete bayesiana
 		code.append("bnet = mk_dbn(intra, inter, ns, 'names', names);\n\n");
 		
+		//creazione lista node di cui calcolare cpd
+		ArrayList<Integer> tempNodes = new ArrayList<Integer>();
 		ArrayList<Integer> cpdNodes = new ArrayList<Integer>();
-		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
+		for(Integer i : hStates)
+			cpdNodes.add(i);
+		for(Integer i : obs)
+			cpdNodes.add(i);
+		for(Integer i : hStates) 
+			if((net.getTemporalParents(i, 1)).length!=0) {
+				cpdNodes.add(i);
+				tempNodes.add(i);
+			}
+		for(Integer i : obs) //necessario?
+			if((net.getTemporalParents(i, 1)).length!=0){
+				cpdNodes.add(i);
+				tempNodes.add(i);
+			}
+		
+		
+		
+		//calcolo cpd
+		for(Integer i : cpdNodes) {
+		/*
+			// nodo probabilistico
+			if(net.getNodeType(i) == Network.NodeType.CPT) {
+				// nodo senza archi temporali entranti
+				if(!tempNodes.contains(i)) {
+					// nodo senza genitori
+					if(net.getParents(i).length==0) {
+						code.append("cpt(:,");
+						code.append(":)=[");
+					}
+					// nodo con genitori
+					else {
+						System.out.println("//////////////////"+ "NODO:"+net.getNodeName(i)+"///////////////////");
+						//printCptMatrix(net, i);
+						myPrint(net, i);
+					}
+				}
+				//nodo con archi tempoali entranti
+				else {}
+				
+				
+			}
+			
+			if(net.getNodeType(i) == Network.NodeType.TRUTH_TABLE) {}
+				
+			if(net.getNodeType(i) == Network.NodeType.NOISY_MAX) {}
+			
+			
+		*/	
+			
+			System.out.println("//////////////////"+ "NODO:"+net.getNodeName(i)+"///////////////////");
+			//printCptMatrix(net, i);
+			myPrint(net, i);
 			
 		}
+			
+		
 		
 		System.out.println(code.toString());	
+		
+		
+			
+
 			
 	}
 
@@ -144,4 +207,79 @@ public class Main {
 			);
 
 	}
+	
+		private static void myPrint(Network net, int nodeHandle) {
+			double[] cpt = net.getNodeDefinition(nodeHandle); 
+			int[] parents = net.getParents(nodeHandle); 
+			int[] pIndex = new int[parents.length];
+			int[] coords = new int[parents.length];
+			
+			int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
+			for(int i=0; i<totCptColumn;i++) {
+				System.out.print("cpt(");
+				if(parents.length==0)
+					System.out.print(":,");
+				int prod = 1;
+				for(int j=parents.length-1;j>=0;j--) {
+					coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j])));
+					prod*=net.getOutcomeCount(parents[j]);
+					
+				}
+				for(int k =0; k<parents.length;k++)
+					System.out.print(coords[k]+",");
+				
+				System.out.print(":)=[");
+				for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
+					System.out.print(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
+				System.out.println("];");
+			}
+			
+			
+				
+			
+			
+		}
+	
+	
+		private static void printCptMatrix(Network net, int nodeHandle) {
+			
+			double[] cpt = net.getNodeDefinition(nodeHandle);
+			int[] parents = net.getParents(nodeHandle);
+			int dimCount = 1 + parents.length;
+			
+			int[] dimSizes = new int[dimCount];
+			for (int i = 0; i < dimCount - 1; i ++) 
+				dimSizes[i] = net.getOutcomeCount(parents[i]);
+			
+			dimSizes[dimSizes.length - 1] = net.getOutcomeCount(nodeHandle);
+			
+			int[] coords = new int[dimCount];
+			for (int elemIdx = 0; elemIdx < cpt.length; elemIdx ++) {
+				indexToCoords(elemIdx, dimSizes, coords);
+				String outcome = net.getOutcomeId(nodeHandle, coords[dimCount - 1]);
+				System.out.printf(" P(%s(OUTCOME NODO)", outcome);
+				
+				if (dimCount > 1) {
+					System.out.print(" | ");
+					for (int parentIdx = 0; parentIdx < parents.length; parentIdx++){
+						if (parentIdx > 0) System.out.print(",");
+						int parentHandle = parents[parentIdx];
+						System.out.printf("%s(PARENT)=%s(OUTCOME PARENT)",net.getNodeId(parentHandle),net.getOutcomeId(parentHandle, coords[parentIdx]));
+					}
+				}
+				double prob = cpt[elemIdx];
+				System.out.printf(")=%f\n", prob);
+			}
+		}
+		
+		private static void indexToCoords(int index, int[] dimSizes, int[] coords) {
+			int prod = 1;
+			for (int i = dimSizes.length - 1; i >= 0; i --) {
+				coords[i] = (index / prod) % dimSizes[i];
+				prod *= dimSizes[i];
+			}
+		}
+		
+		
+
 }
