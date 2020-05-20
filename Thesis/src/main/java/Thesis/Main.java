@@ -139,40 +139,42 @@ public class Main {
 		
 		
 		//calcolo cpd
-		for(Integer i : cpdNodes) {
-		/*
+		int tresh = cpdNodes.size() - tempNodes.size();
+		for(int i =0; i<cpdNodes.size();i++) {
+			int h=cpdNodes.get(i);
 			// nodo probabilistico
-			if(net.getNodeType(i) == Network.NodeType.CPT) {
+			if(net.getNodeType(h) == Network.NodeType.CPT) {
 				// nodo senza archi temporali entranti
-				if(!tempNodes.contains(i)) {
-					// nodo senza genitori
-					if(net.getParents(i).length==0) {
-						code.append("cpt(:,");
-						code.append(":)=[");
-					}
-					// nodo con genitori
-					else {
-						System.out.println("//////////////////"+ "NODO:"+net.getNodeName(i)+"///////////////////");
-						//printCptMatrix(net, i);
-						myPrint(net, i);
-					}
+				if(i<tresh) {
+					
+					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
+					myCpdPrint(net, h,code);
+					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
+					code.append("clear cpt;\n\n");
+					
 				}
 				//nodo con archi tempoali entranti
-				else {}
+				else {
+					
+					code.append("%node "+net.getNodeName(h)+" slice 2 \n");
+					myTempCpdPrint(net, h,code);
+					if(net.getTemporalParents(h, 1).length>1)
+						cpt1Print(net, h, code);
+					code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(h)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt1);\n");
+					code.append("clear cpt; ");
+					if(net.getTemporalParents(h, 1).length>1)
+						code.append("clear cpt1;");
+					code.append("\n\n");
+				}
 				
 				
 			}
 			
-			if(net.getNodeType(i) == Network.NodeType.TRUTH_TABLE) {}
+			if(net.getNodeType(h) == Network.NodeType.TRUTH_TABLE) {}
 				
-			if(net.getNodeType(i) == Network.NodeType.NOISY_MAX) {}
+			if(net.getNodeType(h) == Network.NodeType.NOISY_MAX) {}
 			
 			
-		*/	
-			
-			System.out.println("//////////////////"+ "NODO:"+net.getNodeName(i)+"///////////////////");
-			//printCptMatrix(net, i);
-			myPrint(net, i);
 			
 		}
 			
@@ -208,7 +210,7 @@ public class Main {
 
 	}
 	
-		private static void myPrint(Network net, int nodeHandle) {
+		private static void myCpdPrint(Network net, int nodeHandle, StringBuilder code) {
 			double[] cpt = net.getNodeDefinition(nodeHandle); 
 			int[] parents = net.getParents(nodeHandle); 
 			int[] pIndex = new int[parents.length];
@@ -216,9 +218,9 @@ public class Main {
 			
 			int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
 			for(int i=0; i<totCptColumn;i++) {
-				System.out.print("cpt(");
+				code.append("cpt(");
 				if(parents.length==0)
-					System.out.print(":,");
+					code.append(":,");
 				int prod = 1;
 				for(int j=parents.length-1;j>=0;j--) {
 					coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j])));
@@ -226,21 +228,59 @@ public class Main {
 					
 				}
 				for(int k =0; k<parents.length;k++)
-					System.out.print(coords[k]+",");
+					code.append(coords[k]+1 +",");
 				
-				System.out.print(":)=[");
+				code.append(":)=[");
 				for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
-					System.out.print(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
-				System.out.println("];");
+					code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
+				code.deleteCharAt(code.length()-1);
+				code.deleteCharAt(code.length()-1);
+				code.append("];\n");
 			}
 			
-			
+		}
+			private static void myTempCpdPrint(Network net, int nodeHandle,StringBuilder code) {
+				double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
+				TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
+				int[] pIndex = new int[parents.length];
+				int[] coords = new int[parents.length];
 				
-			
+				int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
+				for(int i=0; i<totCptColumn;i++) {
+					code.append("cpt(");
+					if(parents.length==0)
+						code.append(":,");
+					int prod = 1;
+					for(int j=parents.length-1;j>=0;j--) {
+						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j].handle)));
+						prod*=net.getOutcomeCount(parents[j].handle);
+						
+					}
+					for(int k =0; k<parents.length;k++)
+						code.append(coords[k]+1 +",");
+					
+					code.append(":)=[");
+					for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
+						code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
+					code.deleteCharAt(code.length()-1);
+					code.deleteCharAt(code.length()-1);
+					code.append("];\n");
+				}		
 			
 		}
+			
+			private static void cpt1Print(Network net, int nodeHandle,StringBuilder code){
+				TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
+				code.append("cpt1=mk_named_CPT_inter({'"+net.getNodeId(nodeHandle)+"', ");
+				for(TemporalInfo t : parents)
+					if(t.handle != nodeHandle)
+						code.append("'"+net.getNodeId(t.handle)+"', ");
+				code.append("'"+net.getNodeId(nodeHandle)+"'");
+				code.append("},names, bnet.dag, cpt,[]);\n");
+					
+			}
 	
-	
+	/*
 		private static void printCptMatrix(Network net, int nodeHandle) {
 			
 			double[] cpt = net.getNodeDefinition(nodeHandle);
@@ -280,6 +320,6 @@ public class Main {
 			}
 		}
 		
-		
+		*/
 
 }
