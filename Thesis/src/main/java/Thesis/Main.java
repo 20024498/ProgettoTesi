@@ -166,20 +166,42 @@ public class Main {
 						code.append("clear cpt1;");
 					code.append("\n\n");
 				}
-				
-				
+					
 			}
 			
-			if(net.getNodeType(h) == Network.NodeType.TRUTH_TABLE) {}
+			if(net.getNodeType(h) == Network.NodeType.TRUTH_TABLE) {
 				
-			if(net.getNodeType(h) == Network.NodeType.NOISY_MAX) {}
-			
+				if(i<tresh) {
+					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),");
+					if(checkOR(net, h,code)) {
+						code.append("\n OR VEROooooooooooooooooooooo\n");
+					}
+					else if(checkAND(net, h,code)) {
+						code.append("\n AND VEROoooooooooooooooooooooooo\n");
+					}
+					else {
+						//Per ora niente
+					}
+				}
+				else {
+					//Per ora niente
+				}
+			}
+				
+			if(net.getNodeType(h) == Network.NodeType.NOISY_MAX) {
+				if(i<tresh) {
+					
+				}
+				else {
+					//Per ora niente
+				}// occorre creare funzione su matlab ?
+			}
 			
 			
 		}
 			
 		
-		
+		//File di output
 		System.out.println(code.toString());	
 		
 		
@@ -187,28 +209,55 @@ public class Main {
 
 			
 	}
-
-	private static License licenseInit() {
-		return new smile.License(
-				"SMILE LICENSE b868fc1e e51692e8 1e85e6f2 " +
-				"THIS IS AN ACADEMIC LICENSE AND CAN BE USED " +
-				"SOLELY FOR ACADEMIC RESEARCH AND TEACHING, " +
-				"AS DEFINED IN THE BAYESFUSION ACADEMIC " +
-				"SOFTWARE LICENSING AGREEMENT. " +
-				"Serial #: 2eil2unyjs5or1wst5l3g1cxj " +
-				"Issued for: ANDREA GILI (20024498@studenti.uniupo.it) " +
-				"Academic institution: Universit\u00e0 del Piemonte Orientale " +
-				"Valid until: 2020-10-18 " +
-				"Issued by BayesFusion activation server",
-				new byte[] {
-				53,-6,-125,-49,125,-71,13,-89,-24,121,87,33,-27,-6,85,110,
-				114,2,11,-16,-35,13,91,-106,-118,62,83,-3,79,20,-119,-102,
-				-50,1,-29,-90,-102,29,61,90,15,-109,-21,-5,6,81,56,90,
-				22,-104,-84,90,-10,-34,85,-107,-82,-109,120,22,-10,-120,93,75
+	//SOLO STATI BINARI
+	//l'output corrispondente allo stato falso deve essere messo per primo
+	private static boolean checkAND(Network net, int h,StringBuilder code) {
+		double[] defs = net.getNodeDefinition(h);
+		int len = defs.length;
+		if(defs[len-2]==0.0 && defs[len-1]==1.0) {
+			for(int i=0; i<len-2;i++) {
+				if(i%2==0) {
+					if(defs[i]!=1.0)
+						return false;
 				}
-			);
-
+				else
+					if(defs[i]!=0.0)
+						return false;
+			}
+		}
+		else {
+			code.append("\n"+ h +" FALSOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+			return false;}
+			//code.append(d+",");
+		//code.append("\n");
+		return true;
 	}
+	
+	//SOLO STATI BINARI
+	//l'output corrispondente allo stato falso deve essere messo per primo
+	private static boolean checkOR(Network net, int h,StringBuilder code) {
+		//code.append("\n-------------------------------->QUI:");
+		double[] defs = net.getNodeDefinition(h);
+		if(defs[0]==1.0 && defs[1]==0.0) {
+			for(int i=2; i<defs.length;i++) {
+				if(i%2==0) {
+					if(defs[i]!=0.0)
+						return false;
+				}
+				else
+					if(defs[i]!=1.0)
+						return false;
+			}
+		}
+		else {
+			code.append("\n"+ h +" FALSOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+			return false;}
+			//code.append(d+",");
+		//code.append("\n");
+		return true;
+	}
+
+
 	
 		private static void myCpdPrint(Network net, int nodeHandle, StringBuilder code) {
 			double[] cpt = net.getNodeDefinition(nodeHandle); 
@@ -321,5 +370,27 @@ public class Main {
 		}
 		
 		*/
+			
+			private static License licenseInit() {
+				return new smile.License(
+						"SMILE LICENSE b868fc1e e51692e8 1e85e6f2 " +
+						"THIS IS AN ACADEMIC LICENSE AND CAN BE USED " +
+						"SOLELY FOR ACADEMIC RESEARCH AND TEACHING, " +
+						"AS DEFINED IN THE BAYESFUSION ACADEMIC " +
+						"SOFTWARE LICENSING AGREEMENT. " +
+						"Serial #: 2eil2unyjs5or1wst5l3g1cxj " +
+						"Issued for: ANDREA GILI (20024498@studenti.uniupo.it) " +
+						"Academic institution: Universit\u00e0 del Piemonte Orientale " +
+						"Valid until: 2020-10-18 " +
+						"Issued by BayesFusion activation server",
+						new byte[] {
+						53,-6,-125,-49,125,-71,13,-89,-24,121,87,33,-27,-6,85,110,
+						114,2,11,-16,-35,13,91,-106,-118,62,83,-3,79,20,-119,-102,
+						-50,1,-29,-90,-102,29,61,90,15,-109,-21,-5,6,81,56,90,
+						22,-104,-84,90,-10,-34,85,-107,-82,-109,120,22,-10,-120,93,75
+						}
+					);
+
+			}
 
 }
