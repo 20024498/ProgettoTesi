@@ -59,8 +59,8 @@
 			<resultingstates>State0 State1 State1 State1</resultingstates>
 		</deterministic>
 		<deterministic id="NewICS" dynamic="plate">
-			<state id="State1" />
 			<state id="State0" />
+			<state id="State1" />
 			<parents>ICSMasq ICSServ</parents>
 			<resultingstates>State0 State0 State0 State1</resultingstates>
 		</deterministic>
@@ -86,7 +86,7 @@
 			<state id="State0" />
 			<state id="State1" />
 			<parents>NewICS MITM</parents>
-			<strengths>1 0 0 1</strengths>
+			<strengths>0 1 0 1</strengths>
 			<parameters>0 1 0 1 0 1 0 1 0.5 0.5</parameters>
 		</noisymax>
 		<noisymax id="CoherentDev" dynamic="plate">
