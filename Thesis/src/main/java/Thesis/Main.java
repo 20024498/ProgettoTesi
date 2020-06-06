@@ -172,17 +172,19 @@ public class Main {
 			if(net.getNodeType(h) == Network.NodeType.TRUTH_TABLE) {
 				
 				if(i<tresh) {
-					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),");
+					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
 					if(checkOR(net, h,code)) {
-						code.append("\n OR VEROooooooooooooooooooooo\n");
+						code.append("'any');\n");
 						
 					}
 					else if(checkAND(net, h,code)) {
-						code.append("\n AND VEROooooooooooooooooooooo\n");
+						code.append("'all');\n");
 					}
 					else {
 						//Per ora niente
 					}
+					
+					code.append("clear cpt;\n\n");
 				}
 				else {
 					//Per ora niente
@@ -227,10 +229,11 @@ public class Main {
 			}
 		}
 		else {
-			code.append("\n"+ h +" FALSOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+			
+			//TODO da eliminare con rete sistemata
+			code.append("ERRORE AND RETE ESEMPIO);\n");
 			return false;}
-			//code.append(d+",");
-		//code.append("\n");
+		
 		return true;
 	}
 	
@@ -248,13 +251,13 @@ public class Main {
 				else
 					if(defs[i]!=1.0)
 						return false;
+				
 			}
 		}
 		else {
-			code.append("\n"+ h +" FALSOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+			
 			return false;}
-			//code.append(d+",");
-		//code.append("\n");
+		
 		return true;
 		
 		
