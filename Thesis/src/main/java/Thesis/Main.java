@@ -175,9 +175,10 @@ public class Main {
 					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),");
 					if(checkOR(net, h,code)) {
 						code.append("\n OR VEROooooooooooooooooooooo\n");
+						
 					}
 					else if(checkAND(net, h,code)) {
-						code.append("\n AND VEROoooooooooooooooooooooooo\n");
+						code.append("\n AND VEROooooooooooooooooooooo\n");
 					}
 					else {
 						//Per ora niente
@@ -255,6 +256,8 @@ public class Main {
 			//code.append(d+",");
 		//code.append("\n");
 		return true;
+		
+		
 	}
 
 
