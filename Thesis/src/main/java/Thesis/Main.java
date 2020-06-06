@@ -237,6 +237,7 @@ public class Main {
 		return true;
 	}
 	
+	
 	//SOLO STATI BINARI
 	//l'output corrispondente allo stato falso deve essere messo per primo
 	private static boolean checkOR(Network net, int h,StringBuilder code) {
