@@ -193,13 +193,15 @@ public class Main {
 				
 			if(net.getNodeType(h) == Network.NodeType.NOISY_MAX) {
 				if(i<tresh) {
-					
+					code.append(net.getNodeName(h)+" :");
+					code.append("leak=");
+					for(double d : net.getNodeDefinition(h))
+						code.append(d+",\n");
 				}
 				else {
 					//Per ora niente
 				}// occorre creare funzione su matlab ?
 			}
-			
 			
 		}
 			
@@ -228,11 +230,8 @@ public class Main {
 						return false;
 			}
 		}
-		else {
-			
-			//TODO da eliminare con rete sistemata
-			code.append("ERRORE AND RETE ESEMPIO);\n");
-			return false;}
+		else 
+			return false;
 		
 		return true;
 	}
@@ -252,12 +251,10 @@ public class Main {
 				else
 					if(defs[i]!=1.0)
 						return false;
-				
 			}
 		}
-		else {
-			
-			return false;}
+		else 
+			return false;
 		
 		return true;
 		
