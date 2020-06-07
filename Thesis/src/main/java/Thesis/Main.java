@@ -16,7 +16,7 @@ public class Main {
 		
 		//Inizializzazione rete
 		Network net = new Network();
-		net.readFile("net/rete.xdsl");
+		net.readFile("net/rete2.xdsl");
 		
 		/*TODO CONTROLLO ORDINE ARCHI*/
 		
@@ -66,6 +66,7 @@ public class Main {
 		
 		//archi intraslice
 		code.append("intrac={");
+		
 		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
 			int[] children;
 			if((children = net.getChildren(h)).length>0) 
@@ -80,6 +81,10 @@ public class Main {
 			code.deleteCharAt(code.length()-1);
 			code.deleteCharAt(code.length()-1);
 		}
+		
+		
+	
+		
 		code.append("};\n\n");
 		
 		//matrice adiacenza archi intraslice
@@ -87,9 +92,16 @@ public class Main {
 		
 		//archi interslice
 		code.append("interc={");
+		
+		/*
 		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
+			
 			TemporalInfo[] tChildren;
-			if((tChildren = net.getTemporalChildren(h)).length>0) 
+			
+			tChildren = net.getTemporalChildren(h);
+			
+			
+			if(tChildren.length>0)
 				for(TemporalInfo i : tChildren) {
 					code.append("'"+net.getNodeName(h)+"'");
 					code.append(", ");
@@ -97,11 +109,35 @@ public class Main {
 					code.append(";\n");
 				}
 			
+			
 		}
+		
 		if(code.length()>=2) {
 			code.deleteCharAt(code.length()-1);
 			code.deleteCharAt(code.length()-1);
 		}
+		*/
+		//DA QUI
+		boolean temp = false;
+		for (int h : net.getAllNodes()) {
+			for (int k : net.getAllNodes()) {
+				if(net.temporalArcExists(h, k, 1)) {
+					code.append("'"+net.getNodeName(h)+"'");
+					code.append(", ");
+					code.append("'"+net.getNodeName(k)+"'");
+					code.append(";\n");
+					temp = true;
+				}	
+			}
+		}
+		if(temp==true) {
+			code.deleteCharAt(code.length()-1);
+			code.deleteCharAt(code.length()-1);
+		}
+		
+		
+		// A QUI
+		
 		code.append("};\n\n");
 		
 		//matrice adiacenza archi interslice
@@ -126,16 +162,26 @@ public class Main {
 		for(Integer i : obs)
 			cpdNodes.add(i);
 		for(Integer i : hStates) 
-			if((net.getTemporalParents(i, 1)).length!=0) {
+			/*if((net.getTemporalParents(i, 1)).length!=0) {
 				cpdNodes.add(i);
 				tempNodes.add(i);
-			}
+			}*/
+			for(int parent :net.getAllNodes())
+				if(net.temporalArcExists(parent, i, 1)){
+					cpdNodes.add(i);
+					tempNodes.add(i);
+				}
+						
 		for(Integer i : obs) //necessario?
-			if((net.getTemporalParents(i, 1)).length!=0){
+			/*if((net.getTemporalParents(i, 1)).length!=0){
 				cpdNodes.add(i);
 				tempNodes.add(i);
-			}
-		
+			}*/
+			for(int parent :net.getAllNodes())
+				if(net.temporalArcExists(parent, i, 1)){
+					cpdNodes.add(i);
+					tempNodes.add(i);
+				}
 		
 		
 		//calcolo cpd
