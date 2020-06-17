@@ -227,25 +227,44 @@ public class Main {
 						code.append("'all');\n");
 					}
 					else {
-						//Per ora niente
+						//Per ora niente (nodi deterministici)
 					}
 					
 					code.append("clear cpt;\n\n");
 				}
 				else {
-					//Per ora niente
+					//Per ora niente (archi temporali entranti)
 				}
 			}
 				
 			if(net.getNodeType(h) == Network.NodeType.NOISY_MAX) {
+				
+				//SOLO noisy-or per adesso(nodi binari)
 				if(i<tresh) {
-					code.append(net.getNodeName(h)+" :");
+					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
 					code.append("leak=");
-					for(double d : net.getNodeDefinition(h))
-						code.append(d+",\n");
+					double[] defs = net.getNodeDefinition(h);
+					code.append(defs[defs.length-2]+";\n");
+					code.append("parents_dn={");
+					for(int p : net.getParents(h))
+						code.append("'"+net.getNodeName(p)+"'"+", ");
+					code.deleteCharAt(code.length()-1);
+					code.deleteCharAt(code.length()-1);
+					code.append("};\n");
+					code.append("inh_prob=[");
+					for(int d =1; d<defs.length-2;d+=4)
+						code.append(defs[d]+", ");
+					code.deleteCharAt(code.length()-1);
+					code.deleteCharAt(code.length()-1);
+					code.append("];\n");
+					code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(h)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
+					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(h)+"'),leak, inh_prob1);\n");
+					code.append("clear inh_prob inh_prob1 leak;\n\n");
+					
+					
 				}
 				else {
-					//Per ora niente
+					//Per ora niente archi temporali
 				}// occorre creare funzione su matlab ?
 			}
 			
