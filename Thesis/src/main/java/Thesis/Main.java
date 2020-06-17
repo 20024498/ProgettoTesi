@@ -34,7 +34,7 @@ public class Main {
 			
 			if(net.getNodeBgColor(h).equals(new Color(229,246,247))) {
 				hStates.add(h);
-				code.append(net.getNodeName(h));
+				code.append("'"+net.getNodeName(h)+"'");
 				code.append(", ");
 			}
 		}
@@ -51,7 +51,7 @@ public class Main {
 			
 			if(!net.getNodeBgColor(h).equals(new Color(229,246,247))) {
 				obs.add(h);
-				code.append(net.getNodeName(h));
+				code.append("'"+net.getNodeName(h)+"'");
 				code.append(", ");
 			}
 		}
