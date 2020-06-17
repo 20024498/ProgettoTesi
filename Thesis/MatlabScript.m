@@ -1,7 +1,7 @@
 clear 
 
-h_states = {ModConLog, WrongReact, ICSServ, ICSMasq, SpoofComMes, MITM, ModComMes, SpoofRepMes, ModRepMes, CorrReact, NotCoherStatus(Or), NewICS(And), ICSCompr(Or)};
-obs = {Periodic, SuspArgICS, QuickExecSuspCom, CoherentDev};
+h_states = {'ModConLog', 'WrongReact', 'ICSServ', 'ICSMasq', 'SpoofComMes', 'MITM', 'ModComMes', 'SpoofRepMes', 'ModRepMes', 'CorrReact', 'NotCoherStatus(Or)', 'NewICS(And)', 'ICSCompr(Or)'};
+obs = {'Periodic', 'SuspArgICS', 'QuickExecSuspCom', 'CoherentDev'};
 names=[h_states, obs];
 
 n=length(names);
