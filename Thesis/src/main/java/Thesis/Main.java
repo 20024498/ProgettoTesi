@@ -1,6 +1,9 @@
 package Thesis;
 
 import java.awt.Color;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import smile.*;
@@ -16,7 +19,7 @@ public class Main {
 		
 		//Inizializzazione rete
 		Network net = new Network();
-		net.readFile("net/rete2.xdsl");
+		net.readFile("net/rete.xdsl");
 		
 		/*TODO CONTROLLO ORDINE ARCHI*/
 		
@@ -270,8 +273,11 @@ public class Main {
 			
 		}
 			
+		//Inferenza
+		printInference(code);
 		
 		//File di output
+		saveFile(code.toString());
 		System.out.println(code.toString());	
 		
 		
@@ -396,6 +402,126 @@ public class Main {
 				code.append("'"+net.getNodeId(nodeHandle)+"'");
 				code.append("},names, bnet.dag, cpt,[]);\n");
 					
+			}
+			
+			private static void saveFile(String code) {
+					
+					String fileName = "MatlabScript.m";
+				    BufferedWriter writer;
+					try {
+						writer = new BufferedWriter(new FileWriter(fileName));
+						writer.write(code);
+					    writer.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				    
+			}
+			
+			private static void printInference(StringBuilder code) {
+				code.append("% choose the inference engine\n" + 
+						"ec='JT';\n" + 
+						"\n" + 
+						"% ff=0 --> no fully factorized  OR ff=1 --> fully factorized\n" + 
+						"ff=1;\n" + 
+						"\n" + 
+						"% list of clusters\n" + 
+						"if (ec=='JT')\n" + 
+						"	engine=bk_inf_engine(bnet, 'clusters', 'exact'); %exact inference\n" + 
+						"else\n" + 
+						"	if (ff==1)\n" + 
+						"		engine=bk_inf_engine(bnet, 'clusters', 'ff'); % fully factorized\n" + 
+						"	else\n" + 
+						"		clusters={[]};\n" + 
+						"		engine=bk_inf_engine(bnet, 'clusters', clusters);\n" + 
+						"	end\n" + 
+						"end\n" + 
+						"\n" + 
+						"% IMPORTANT: DrawNet start slices from 0,\n" + 
+						"T=11; %max time span (from XML file campo Time Slice) thus from 0 to T-1\n" + 
+						"tStep=1; %from  XML file campo Time Step\n" + 
+						"evidence=cell(n,T); % create the evidence cell array\n" + 
+						"\n" + 
+						"% Evidence\n" + 
+						"% first cells of evidence are for time 0\n" + 
+						"t=5;\n" + 
+						"evidence{bnet.names('Periodic'),t+1}=1; \n" + 
+						"t=6;\n" + 
+						"evidence{bnet.names('Periodic'),t+1}=2;\n" + 
+						"evidence{bnet.names('SuspArgICS'),t+1}=2;\n" + 
+						"t=7;\n" + 
+						"evidence{bnet.names('CoherentDev'),t+1}=2;\n" + 
+						"% Campo Algoritmo di Inferenza  (filtering / smoothing)\n" + 
+						"filtering=1;\n" + 
+						"% filtering=0 --> smoothing (is the default - enter_evidence(engine,evidence))\n" + 
+						"% filtering=1 --> filtering\n" + 
+						"if ~filtering\n" + 
+						"	fprintf('\\n*****  SMOOTHING *****\\n\\n');\n" + 
+						"else\n" + 
+						"	fprintf('\\n*****  FILTERING *****\\n\\n');\n" + 
+						"end\n" + 
+						"\n" + 
+						"[engine, loglik] = enter_evidence(engine, evidence, 'filter', filtering);\n" + 
+						"\n" + 
+						"% analysis time is t for anterior nodes and t+1 for ulterior nodes\n" + 
+						"for t=1:tStep:T-1\n" + 
+						"%t = analysis time\n" + 
+						"\n" + 
+						"% create the vector of marginals\n" + 
+						"% marg(i).T is the posterior distribution of node T\n" + 
+						"% with marg(i).T(false) and marg(i).T(true)\n" + 
+						"\n" + 
+						"% NB. if filtering then ulterior nodes cannot be marginalized at time t=1\n" + 
+						"\n" + 
+						"if ~filtering\n" + 
+						"	for i=1:(n*2)\n" + 
+						"		marg(i)=marginal_nodes(engine, i , t);\n" + 
+						"	end\n" + 
+						"else\n" + 
+						"	if t==1\n" + 
+						"		for i=1:n\n" + 
+						"			marg(i)=marginal_nodes(engine, i, t);\n" + 
+						"		end\n" + 
+						"	else\n" + 
+						"		for i=1:(n*2)\n" + 
+						"			marg(i)=marginal_nodes(engine, i, t);\n" + 
+						"		end\n" + 
+						"	end\n" + 
+						"end\n" + 
+						"\n" + 
+						"% Printing results\n" + 
+						"% IMPORTANT: To be consistent with DrawNet we start counting/printing time slices from 0\n" + 
+						"\n" + 
+						"\n" + 
+						"% Anterior nodes are printed from t=1 to T-1\n" + 
+						"fprintf('\\n\\n**** Time %i *****\\n****\\n\\n',t-1);\n" + 
+						"%fprintf('*** Anterior nodes \\n');\n" + 
+						"for i=1:n\n" + 
+						"	if isempty(evidence{i,t})\n" + 
+						"		for k=1:ns(i)\n" + 
+						"			fprintf('Posterior of node %i:%s value %i : %d\\n',i, names{i}, k, marg(i).T(k));\n" + 
+						"		end\n" + 
+						"			fprintf('**\\n');\n" + 
+						"		else\n" + 
+						"			fprintf('Node %i:%s observed at value: %i\\n**\\n',i,names{i}, evidence{i,t});\n" + 
+						"		end\n" + 
+						"	end\n" + 
+						"end\n" + 
+						"\n" + 
+						"% Ulterior nodes are printed at last time slice\n" + 
+						"fprintf('\\n\\n**** Time %i *****\\n****\\n\\n',T-1);\n" + 
+						"%fprintf('*** Ulterior nodes \\n');\n" + 
+						"for i=(n+1):(n*2)\n" + 
+						"	if isempty(evidence{i-n,T})\n" + 
+						"		for k=1:ns(i-n)\n" + 
+						"			fprintf('Posterior of node %i:%s value %i : %d\\n',i, names{i-n}, k, marg(i).T(k));\n" + 
+						"		end\n" + 
+						"		fprintf('**\\n');\n" + 
+						"	else\n" + 
+						"		fprintf('Node %i:%s observed at value: %i\\n**\\n',i,names{i-n}, evidence{i-n,T});\n" + 
+						"	end\n" + 
+						"end");
 			}
 	
 	/*
