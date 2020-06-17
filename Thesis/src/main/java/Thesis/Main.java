@@ -208,11 +208,12 @@ public class Main {
 					
 					code.append("%node "+net.getNodeName(h)+" slice 2 \n");
 					myTempCpdPrint(net, h,code);
-					if(net.getTemporalParents(h, 1).length>1)
+					boolean moreTemporalParents = net.getTemporalParents(h, 1).length>1;
+					if(moreTemporalParents)
 						cpt1Print(net, h, code);
-					code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(h)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt1);\n");
+					code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(h)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(h)+"'),'CPT',"+(moreTemporalParents?"cpt1":"cpt")+");\n");
 					code.append("clear cpt; ");
-					if(net.getTemporalParents(h, 1).length>1)
+					if(moreTemporalParents) 
 						code.append("clear cpt1;");
 					code.append("\n\n");
 				}

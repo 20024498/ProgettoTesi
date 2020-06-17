@@ -138,7 +138,7 @@ clear inh_prob inh_prob1 leak;
 %node ModConLog slice 2 
 cpt(1,:)=[0.86871, 0.13129];
 cpt(2,:)=[0.0, 1.0];
-bnet.CPD{bnet.eclass2(bnet.names('ModConLog'))}=tabular_CPD(bnet,n+bnet.names('ModConLog'),'CPT',cpt1);
+bnet.CPD{bnet.eclass2(bnet.names('ModConLog'))}=tabular_CPD(bnet,n+bnet.names('ModConLog'),'CPT',cpt);
 clear cpt; 
 
 %node WrongReact slice 2 
@@ -162,13 +162,13 @@ clear cpt; clear cpt1;
 %node ICSServ slice 2 
 cpt(1,:)=[0.95165, 0.04835];
 cpt(2,:)=[0.0, 1.0];
-bnet.CPD{bnet.eclass2(bnet.names('ICSServ'))}=tabular_CPD(bnet,n+bnet.names('ICSServ'),'CPT',cpt1);
+bnet.CPD{bnet.eclass2(bnet.names('ICSServ'))}=tabular_CPD(bnet,n+bnet.names('ICSServ'),'CPT',cpt);
 clear cpt; 
 
 %node ICSMasq slice 2 
 cpt(1,:)=[0.94351, 0.05649000000000004];
 cpt(2,:)=[0.0, 1.0];
-bnet.CPD{bnet.eclass2(bnet.names('ICSMasq'))}=tabular_CPD(bnet,n+bnet.names('ICSMasq'),'CPT',cpt1);
+bnet.CPD{bnet.eclass2(bnet.names('ICSMasq'))}=tabular_CPD(bnet,n+bnet.names('ICSMasq'),'CPT',cpt);
 clear cpt; 
 
 %node SpoofComMes slice 2 
@@ -192,7 +192,7 @@ clear cpt; clear cpt1;
 %node MITM slice 2 
 cpt(1,:)=[0.85993, 0.14007];
 cpt(2,:)=[0.0, 1.0];
-bnet.CPD{bnet.eclass2(bnet.names('MITM'))}=tabular_CPD(bnet,n+bnet.names('MITM'),'CPT',cpt1);
+bnet.CPD{bnet.eclass2(bnet.names('MITM'))}=tabular_CPD(bnet,n+bnet.names('MITM'),'CPT',cpt);
 clear cpt; 
 
 %node ModComMes slice 2 
