@@ -22,7 +22,6 @@ public class Main {
 		Network net = new Network();
 		net.readFile("net/rete.xdsl");
 		
-		/*TODO CONTROLLO MODELLO MARKOVIANO*/
 		
 		//clear iniziale
 		StringBuilder code = new StringBuilder();
@@ -61,6 +60,12 @@ public class Main {
 			code.deleteCharAt(code.length()-1);
 		}
 		code.append("};\n");
+		
+		//test markovianità rete
+		if(!isMarkovian(net, hStates, obs))
+			System.out.println("NON E' MARKOVIANA");
+		else
+			System.out.println("E' MARKOVIANA");
 		
 		//insieme dei nomi
 		code.append("names=[h_states, obs];\n\n");
@@ -441,8 +446,7 @@ public class Main {
 						temp = true;
 						noParents = false;
 					}	
-				}
-					
+				}	
 				if(temp==false) {
 					
 					int[] parents = net.getParents(nodeHandle);
@@ -459,6 +463,25 @@ public class Main {
 				}
 				
 				code.append("}\n");
+			}
+			
+			private static boolean isMarkovian(Network net,ArrayList<Integer> hStates, ArrayList<Integer> obs) {
+				if(hStates.isEmpty())
+					return false;
+				if(obs.isEmpty())
+					return false;
+				for(Integer i : hStates)
+					if(net.getMaxNodeTemporalOrder(i)>1)
+						return false;
+				for(Integer i : obs)
+					if(net.getMaxNodeTemporalOrder(i)>0)
+						return false;
+				for(Integer h : hStates)
+					for(Integer p : net.getParents(h))
+						if(net.temporalArcExists(p, h, 0))
+							return false;
+				return true;
+							
 			}
 			
 			private static void printInference(StringBuilder code) {
@@ -565,6 +588,7 @@ public class Main {
 						"	end\n" + 
 						"end");
 			}
+			
 	
 	/*
 		private static void printCptMatrix(Network net, int nodeHandle) {
