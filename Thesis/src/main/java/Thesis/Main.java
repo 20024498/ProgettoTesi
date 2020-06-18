@@ -22,7 +22,7 @@ public class Main {
 		Network net = new Network();
 		net.readFile("net/rete.xdsl");
 		
-		/*TODO CONTROLLO ORDINE ARCHI*/
+		/*TODO CONTROLLO MODELLO MARKOVIANO*/
 		
 		//clear iniziale
 		StringBuilder code = new StringBuilder();
@@ -191,6 +191,8 @@ public class Main {
 		//calcolo cpd
 		int tresh = cpdNodes.size() - tempNodes.size();
 		for(int i =0; i<cpdNodes.size();i++) {
+			if(i==tresh)
+				code.append("\n\n%%%%%%%%% ------- slice 2\n\n");
 			int h=cpdNodes.get(i);
 			// nodo probabilistico
 			if(net.getNodeType(h) == Network.NodeType.CPT) {
@@ -198,6 +200,7 @@ public class Main {
 				if(i<tresh) {
 					
 					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
+					printParentOrder(net, h, code);
 					myCpdPrint(net, h,code);
 					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
 					code.append("clear cpt;\n\n");
@@ -207,6 +210,7 @@ public class Main {
 				else {
 					
 					code.append("%node "+net.getNodeName(h)+" slice 2 \n");
+					printParentOrder(net, h, code);
 					myTempCpdPrint(net, h,code);
 					boolean moreTemporalParents = net.getTemporalParents(h, 1).length>1;
 					if(moreTemporalParents)
@@ -223,6 +227,8 @@ public class Main {
 			if(net.getNodeType(h) == Network.NodeType.TRUTH_TABLE) {
 				
 				if(i<tresh) {
+					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
+					printParentOrder(net, h, code);
 					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
 					if(checkOR(net, h,code)) {
 						code.append("'any');\n");
@@ -247,6 +253,7 @@ public class Main {
 				//SOLO noisy-or per adesso(nodi binari)
 				if(i<tresh) {
 					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
+					printParentOrder(net, h, code);
 					code.append("leak=");
 					double[] defs = net.getNodeDefinition(h);
 					code.append(defs[defs.length-2]+";\n");
@@ -419,6 +426,39 @@ public class Main {
 						e.printStackTrace();
 					}
 				    
+			}
+			
+			private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
+				//%parent order:{SpoofComMes, NewICS}
+				code.append("%parent order:{");
+				boolean temp = false;
+				boolean noParents = true;
+				
+				for (int p : net.getAllNodes()) {
+					if(net.temporalArcExists(p, nodeHandle, 1)) {
+						code.append(net.getNodeName(p));
+						code.append(", ");
+						temp = true;
+						noParents = false;
+					}	
+				}
+					
+				if(temp==false) {
+					
+					int[] parents = net.getParents(nodeHandle);
+					for(int p: parents) {
+						code.append(net.getNodeName(p));
+						code.append(", ");
+						noParents = false;
+					}
+				}
+				
+				if(noParents==false) {
+					code.deleteCharAt(code.length()-1);
+					code.deleteCharAt(code.length()-1);
+				}
+				
+				code.append("}\n");
 			}
 			
 			private static void printInference(StringBuilder code) {
