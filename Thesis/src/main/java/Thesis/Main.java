@@ -20,7 +20,7 @@ public class Main {
 		
 		//Inizializzazione rete
 		Network net = new Network();
-		net.readFile("net/rete.xdsl");
+		net.readFile("net/rete5.xdsl");
 		
 		
 		//clear iniziale
@@ -63,7 +63,7 @@ public class Main {
 		
 		//test markovianità rete
 		if(!isMarkovian(net, hStates, obs))
-			System.out.println("NON E' MARKOVIANA");
+			System.err.println("NON E' MARKOVIANA");
 		else
 			System.out.println("E' MARKOVIANA");
 		
@@ -245,10 +245,9 @@ public class Main {
 						code.append("'all');\n");
 					}
 					else {
-						//Per ora niente (nodi deterministici)
+						//NODI DETERMINISTICI GENERICI
 						myCpdPrint(net, h,code);
 						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
-						code.append("clear cpt;\n\n");
 					}
 					
 					code.append("clear cpt;\n\n");
@@ -266,11 +265,6 @@ public class Main {
 					printParentOrder(net, h, code);
 					code.append("leak=");
 					double[] defs = net.getNodeDefinition(h);
-					//prova
-					for(int z =0;z<defs.length;z++) {
-						System.err.println(defs[z]);
-					}
-					//fine prova
 					code.append(defs[defs.length-2]+";\n");
 					code.append("parents_dn={");
 					for(int p : net.getParents(h))
