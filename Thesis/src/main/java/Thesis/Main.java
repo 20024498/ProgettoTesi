@@ -234,16 +234,21 @@ public class Main {
 				if(i<tresh) {
 					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
 					printParentOrder(net, h, code);
-					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
+					
 					if(checkOR(net, h,code)) {
+						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
 						code.append("'any');\n");
 						
 					}
 					else if(checkAND(net, h,code)) {
+						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
 						code.append("'all');\n");
 					}
 					else {
 						//Per ora niente (nodi deterministici)
+						myCpdPrint(net, h,code);
+						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
+						code.append("clear cpt;\n\n");
 					}
 					
 					code.append("clear cpt;\n\n");
@@ -261,6 +266,11 @@ public class Main {
 					printParentOrder(net, h, code);
 					code.append("leak=");
 					double[] defs = net.getNodeDefinition(h);
+					//prova
+					for(int z =0;z<defs.length;z++) {
+						System.err.println(defs[z]);
+					}
+					//fine prova
 					code.append(defs[defs.length-2]+";\n");
 					code.append("parents_dn={");
 					for(int p : net.getParents(h))
