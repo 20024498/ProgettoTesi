@@ -20,7 +20,7 @@ public class Main {
 		
 		//Inizializzazione rete
 		Network net = new Network();
-		net.readFile("net/rete5.xdsl");
+		net.readFile("net/rete4.xdsl");
 		
 		
 		//clear iniziale
@@ -261,27 +261,36 @@ public class Main {
 				
 				//SOLO noisy-or per adesso(nodi binari)
 				if(i<tresh) {
-					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
-					printParentOrder(net, h, code);
-					code.append("leak=");
-					double[] defs = net.getNodeDefinition(h);
-					code.append(defs[defs.length-2]+";\n");
-					code.append("parents_dn={");
-					for(int p : net.getParents(h))
-						code.append("'"+net.getNodeName(p)+"'"+", ");
-					code.deleteCharAt(code.length()-1);
-					code.deleteCharAt(code.length()-1);
-					code.append("};\n");
-					code.append("inh_prob=[");
-					for(int d =1; d<defs.length-2;d+=4)
-						code.append(defs[d]+", ");
-					code.deleteCharAt(code.length()-1);
-					code.deleteCharAt(code.length()-1);
-					code.append("];\n");
-					code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(h)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
-					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(h)+"'),leak, inh_prob1);\n");
-					code.append("clear inh_prob inh_prob1 leak;\n\n");
 					
+					if(checkNoisyOr(net,h)) {
+						code.append("%node "+net.getNodeName(h)+" slice 1 \n");
+						printParentOrder(net, h, code);
+						code.append("leak=");
+						double[] defs = net.getNodeDefinition(h);
+						code.append(defs[defs.length-2]+";\n");
+						code.append("parents_dn={");
+						for(int p : net.getParents(h))
+							code.append("'"+net.getNodeName(p)+"'"+", ");
+						code.deleteCharAt(code.length()-1);
+						code.deleteCharAt(code.length()-1);
+						code.append("};\n");
+						code.append("inh_prob=[");
+						for(int d =1; d<defs.length-2;d+=4)
+							code.append(defs[d]+", ");
+						code.deleteCharAt(code.length()-1);
+						code.deleteCharAt(code.length()-1);
+						code.append("];\n");
+						code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(h)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
+						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(h)+"'),leak, inh_prob1);\n");
+						code.append("clear inh_prob inh_prob1 leak;\n\n");
+					}
+					else { //NOISY MAX
+						code.append("%node "+net.getNodeName(h)+" slice 1 \n");
+						printParentOrder(net, h, code);
+						printNoisyMax(net, h, code);
+						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
+						code.append("clear cpt;\n\n");
+					}
 					
 				}
 				else {
@@ -486,6 +495,50 @@ public class Main {
 							return false;
 				return true;
 							
+			}
+			
+			private static boolean checkNoisyOr(Network net, int nodeHandle) {
+				if(net.getNodeType(nodeHandle) != Network.NodeType.NOISY_MAX)
+					return false;
+				int parents[] = net.getParents(nodeHandle);
+				for(int p : parents)
+					if(net.getOutcomeCount(p)>2)
+						return false;
+				if(net.getOutcomeCount(nodeHandle)>2)
+					return false;
+				
+				return true;
+			}
+			
+			private static void printNoisyMax(Network net, int nodeHandle,StringBuilder code) {
+				
+				double[] cpt = net.getNoisyExpandedDefinition(nodeHandle);
+				int[] parents = net.getParents(nodeHandle); 
+				int[] pIndex = new int[parents.length];
+				int[] coords = new int[parents.length];
+				
+				int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
+				for(int i=0; i<totCptColumn;i++) {
+					code.append("cpt(");
+					if(parents.length==0)
+						code.append(":,");
+					int prod = 1;
+					for(int j=parents.length-1;j>=0;j--) {
+						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j])));
+						prod*=net.getOutcomeCount(parents[j]);
+						
+					}
+					for(int k =0; k<parents.length;k++)
+						code.append(coords[k]+1 +",");
+					
+					code.append(":)=[");
+					for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
+						code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
+					code.deleteCharAt(code.length()-1);
+					code.deleteCharAt(code.length()-1);
+					code.append("];\n");
+				}
+				
 			}
 			
 			private static void printInference(StringBuilder code) {

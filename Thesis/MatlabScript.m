@@ -1,14 +1,14 @@
 clear 
 
-h_states = {'Node1', 'Node2', 'Node3', 'Node4'};
+h_states = {'cold', 'flu', 'malaria', 'fever'};
 obs =};
 names=[h_states, obs];
 
 n=length(names);
 
-intrac={'Node1', 'Node4';
-'Node2', 'Node4';
-'Node3', 'Node4'};
+intrac={'cold', 'fever';
+'flu', 'fever';
+'malaria', 'fever'};
 
 [intra, names] = mk_adj_mat(intrac, names, 1);
 
@@ -20,38 +20,32 @@ ns = [2 2 2 2];
 
 bnet = mk_dbn(intra, inter, ns, 'names', names);
 
-%node Node1 slice 1 
+%node cold slice 1 
 %parent order:{}
-cpt(:,:)=[0.5, 0.5];
-bnet.CPD{bnet.names('Node1')}=tabular_CPD(bnet,bnet.names('Node1'),'CPT',cpt);
+cpt(:,:)=[0.25, 0.75];
+bnet.CPD{bnet.names('cold')}=tabular_CPD(bnet,bnet.names('cold'),'CPT',cpt);
 clear cpt;
 
-%node Node2 slice 1 
+%node flu slice 1 
 %parent order:{}
-cpt(:,:)=[0.5, 0.5];
-bnet.CPD{bnet.names('Node2')}=tabular_CPD(bnet,bnet.names('Node2'),'CPT',cpt);
+cpt(:,:)=[0.1, 0.9];
+bnet.CPD{bnet.names('flu')}=tabular_CPD(bnet,bnet.names('flu'),'CPT',cpt);
 clear cpt;
 
-%node Node3 slice 1 
+%node malaria slice 1 
 %parent order:{}
-cpt(:,:)=[0.5, 0.5];
-bnet.CPD{bnet.names('Node3')}=tabular_CPD(bnet,bnet.names('Node3'),'CPT',cpt);
+cpt(:,:)=[0.01000000000000001, 0.99];
+bnet.CPD{bnet.names('malaria')}=tabular_CPD(bnet,bnet.names('malaria'),'CPT',cpt);
 clear cpt;
 
-%node Node4 slice 1 
-%parent order:{Node1, Node2, Node3}
-cpt(1,1,1,:)=[0.0, 1.0];
-cpt(1,1,2,:)=[0.0, 1.0];
-cpt(1,2,1,:)=[1.0, 0.0];
-cpt(1,2,2,:)=[1.0, 0.0];
-cpt(2,1,1,:)=[0.0, 1.0];
-cpt(2,1,2,:)=[1.0, 0.0];
-cpt(2,2,1,:)=[1.0, 0.0];
-cpt(2,2,2,:)=[0.0, 1.0];
-bnet.CPD{bnet.names('Node4')}=tabular_CPD(bnet,bnet.names('Node4'),'CPT',cpt);
-clear cpt;
-
-clear cpt;
+%node fever slice 1 
+%parent order:{cold, flu, malaria}
+leak=0.0;
+parents_dn={'cold', 'flu', 'malaria'};
+inh_prob=[0.6, 0.2, 0.1];
+inh_prob1=mk_named_noisyor(bnet.names('fever'),parents_dn,names,bnet.dag,inh_prob);
+bnet.CPD{bnet.names('fever')}=noisyor_CPD(bnet, bnet.names('fever'),leak, inh_prob1);
+clear inh_prob inh_prob1 leak;
 
 % choose the inference engine
 ec='JT';
