@@ -20,7 +20,7 @@ public class Main {
 		
 		//Inizializzazione rete
 		Network net = new Network();
-		net.readFile("net/rete4.xdsl");
+		net.readFile("net/rete.xdsl");
 		
 		
 		//clear iniziale
@@ -259,30 +259,15 @@ public class Main {
 				
 			if(net.getNodeType(h) == Network.NodeType.NOISY_MAX) {
 				
-				//SOLO noisy-or per adesso(nodi binari)
+				
 				if(i<tresh) {
 					
 					if(checkNoisyOr(net,h)) {
+						
+						//NOISY OR
 						code.append("%node "+net.getNodeName(h)+" slice 1 \n");
 						printParentOrder(net, h, code);
-						code.append("leak=");
-						double[] defs = net.getNodeDefinition(h);
-						code.append(defs[defs.length-2]+";\n");
-						code.append("parents_dn={");
-						for(int p : net.getParents(h))
-							code.append("'"+net.getNodeName(p)+"'"+", ");
-						code.deleteCharAt(code.length()-1);
-						code.deleteCharAt(code.length()-1);
-						code.append("};\n");
-						code.append("inh_prob=[");
-						for(int d =1; d<defs.length-2;d+=4)
-							code.append(defs[d]+", ");
-						code.deleteCharAt(code.length()-1);
-						code.deleteCharAt(code.length()-1);
-						code.append("];\n");
-						code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(h)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
-						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(h)+"'),leak, inh_prob1);\n");
-						code.append("clear inh_prob inh_prob1 leak;\n\n");
+						printNoisyOr(net,h,code);
 					}
 					else { //NOISY MAX
 						code.append("%node "+net.getNodeName(h)+" slice 1 \n");
@@ -508,6 +493,28 @@ public class Main {
 					return false;
 				
 				return true;
+			}
+			
+			private static void printNoisyOr(Network net, int nodeHandle,StringBuilder code) {
+				
+				code.append("leak=");
+				double[] defs = net.getNodeDefinition(nodeHandle);
+				code.append(defs[defs.length-2]+";\n");
+				code.append("parents_dn={");
+				for(int p : net.getParents(nodeHandle))
+					code.append("'"+net.getNodeName(p)+"'"+", ");
+				code.deleteCharAt(code.length()-1);
+				code.deleteCharAt(code.length()-1);
+				code.append("};\n");
+				code.append("inh_prob=[");
+				for(int d =1; d<defs.length-2;d+=4)
+					code.append(defs[d]+", ");
+				code.deleteCharAt(code.length()-1);
+				code.deleteCharAt(code.length()-1);
+				code.append("];\n");
+				code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(nodeHandle)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
+				code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(nodeHandle)+"'),leak, inh_prob1);\n");
+				code.append("clear inh_prob inh_prob1 leak;\n\n");
 			}
 			
 			private static void printNoisyMax(Network net, int nodeHandle,StringBuilder code) {
