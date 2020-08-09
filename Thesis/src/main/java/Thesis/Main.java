@@ -291,12 +291,15 @@ public class Main {
 		//File di output
 		saveFile(code.toString());
 		System.out.println(code.toString());	
-		
-		
-			
-
 			
 	}
+	
+	
+	
+	
+	
+	
+	
 	//SOLO STATI BINARI
 	//l'output corrispondente allo stato falso deve essere messo per primo
 	private static boolean checkAND(Network net, int h,StringBuilder code) {
