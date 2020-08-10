@@ -253,7 +253,19 @@ public class Main {
 					code.append("clear cpt;\n\n");
 				}
 				else {
-					//Per ora niente (archi temporali entranti)
+					
+					// NODO DETERMINISTICO CON ARCHI TEMPORALI ENTRANTI
+					code.append("%node "+net.getNodeName(h)+" slice 2 \n");
+					printParentOrder(net, h, code);
+					myTempCpdPrint(net, h,code);
+					boolean moreTemporalParents = net.getTemporalParents(h, 1).length>1;
+					if(moreTemporalParents)
+						cpt1Print(net, h, code);
+					code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(h)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(h)+"'),'CPT',"+(moreTemporalParents?"cpt1":"cpt")+");\n");
+					code.append("clear cpt; ");
+					if(moreTemporalParents) 
+						code.append("clear cpt1;");
+					code.append("\n\n");
 				}
 			}
 				
@@ -549,6 +561,45 @@ public class Main {
 					code.append("];\n");
 				}
 				
+			}
+			
+			private static void printTempNoisyMax(Network net, int nodeHandle,StringBuilder code) {
+				double[] temp = net.getNodeTemporalDefinition(nodeHandle, 1); 
+				double[] exp = net.getNoisyExpandedDefinition(nodeHandle);
+				for(double t : temp)
+					System.err.println(t);
+				System.err.println();
+				for(double e : exp)
+					System.err.println(e);
+				
+				/*
+				double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
+				TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
+				int[] pIndex = new int[parents.length];
+				int[] coords = new int[parents.length];
+				
+				int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
+				for(int i=0; i<totCptColumn;i++) {
+					code.append("cpt(");
+					if(parents.length==0)
+						code.append(":,");
+					int prod = 1;
+					for(int j=parents.length-1;j>=0;j--) {
+						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j].handle)));
+						prod*=net.getOutcomeCount(parents[j].handle);
+						
+					}
+					for(int k =0; k<parents.length;k++)
+						code.append(coords[k]+1 +",");
+					
+					code.append(":)=[");
+					for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
+						code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
+					code.deleteCharAt(code.length()-1);
+					code.deleteCharAt(code.length()-1);
+					code.append("];\n");
+				}		
+				*/
 			}
 			
 			private static void printInference(StringBuilder code) {
