@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- This network was created in GeNIe Academic, which can be used for educational and research purposes only -->
+<smile version="1.0" id="Network1" numsamples="1000" discsamples="10000">
+	<nodes>
+		<cpt id="Node1" dynamic="plate">
+			<state id="State0" />
+			<state id="State1" />
+			<probabilities>0.6 0.4</probabilities>
+		</cpt>
+		<cpt id="Node2" dynamic="plate">
+			<state id="State0" />
+			<state id="State1" />
+			<probabilities>0.2 0.8</probabilities>
+		</cpt>
+		<cpt id="Node3" dynamic="plate">
+			<state id="State0" />
+			<state id="State1" />
+			<probabilities>0.5 0.5</probabilities>
+		</cpt>
+		<noisymax id="Node4" dynamic="plate">
+			<state id="State0" />
+			<state id="State1" />
+			<parents>Node1 Node2 Node3</parents>
+			<strengths>0 1 0 1 0 1</strengths>
+			<parameters>0.65 0.35 0 1 0.4 0.6 0 1 0.15 0.85 0 1 0.09999999999999998 0.9</parameters>
+		</noisymax>
+	</nodes>
+	<dynamic numslices="10">
+		<cpt id="Node1" order="1">
+			<parents>Node1</parents>
+			<probabilities>0.1 0.9 0.5 0.5</probabilities>
+		</cpt>
+		<cpt id="Node2" order="1">
+			<parents>Node2</parents>
+			<probabilities>0.7 0.3 0.25 0.75</probabilities>
+		</cpt>
+		<cpt id="Node3" order="1">
+			<parents>Node3</parents>
+			<probabilities>0.6 0.4 0.55 0.45</probabilities>
+		</cpt>
+		<noisymax id="Node4" order="1">
+			<parents>Node4</parents>
+			<strengths>0 1 0 1 0 1 0 1</strengths>
+			<parameters>0.65 0.35 0 1 0.4 0.6 0 1 0.15 0.85 0 1 0.3 0.7 0 1 0.2 0.8</parameters>
+		</noisymax>
+	</dynamic>
+	<extensions>
+		<genie version="1.0" app="GeNIe 2.1.621.1 ACADEMIC" name="Network1" faultnameformat="nodestate">
+			<plate leftwidth="123" rightwidth="120">304 114 904 414</plate>
+			<node id="Node1">
+				<name>Node1</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="7" />
+				<position>501 167 549 197</position>
+			</node>
+			<node id="Node2">
+				<name>Node2</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="7" />
+				<position>576 174 624 204</position>
+			</node>
+			<node id="Node3">
+				<name>Node3</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="7" />
+				<position>655 166 703 196</position>
+			</node>
+			<node id="Node4">
+				<name>Node4</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="7" />
+				<position>579 322 627 352</position>
+			</node>
+		</genie>
+	</extensions>
+</smile>
