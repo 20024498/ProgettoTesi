@@ -176,16 +176,6 @@ cpt1=mk_named_CPT_inter({'WrongReact', 'ModConLog', 'WrongReact'},names, bnet.da
 bnet.CPD{bnet.eclass2(bnet.names('WrongReact'))}=tabular_CPD(bnet,n+bnet.names('WrongReact'),'CPT',cpt1);
 clear cpt; clear cpt1;
 
-%node WrongReact slice 2 
-%parent order:{ModConLog, WrongReact}
-cpt(1,1,:)=[1.0, 0.0];
-cpt(1,2,:)=[0.5, 0.5];
-cpt(2,1,:)=[0.0, 1.0];
-cpt(2,2,:)=[0.0, 1.0];
-cpt1=mk_named_CPT_inter({'WrongReact', 'ModConLog', 'WrongReact'},names, bnet.dag, cpt,[]);
-bnet.CPD{bnet.eclass2(bnet.names('WrongReact'))}=tabular_CPD(bnet,n+bnet.names('WrongReact'),'CPT',cpt1);
-clear cpt; clear cpt1;
-
 %node ICSServ slice 2 
 %parent order:{ICSServ}
 cpt(1,:)=[0.95165, 0.04835];
@@ -199,16 +189,6 @@ cpt(1,:)=[0.94351, 0.05649000000000004];
 cpt(2,:)=[0.0, 1.0];
 bnet.CPD{bnet.eclass2(bnet.names('ICSMasq'))}=tabular_CPD(bnet,n+bnet.names('ICSMasq'),'CPT',cpt);
 clear cpt; 
-
-%node SpoofComMes slice 2 
-%parent order:{SpoofComMes, NewICS(And)}
-cpt(1,1,:)=[1.0, 0.0];
-cpt(1,2,:)=[0.83316, 0.16684];
-cpt(2,1,:)=[0.0, 1.0];
-cpt(2,2,:)=[0.0, 1.0];
-cpt1=mk_named_CPT_inter({'SpoofComMes', 'NewICS', 'SpoofComMes'},names, bnet.dag, cpt,[]);
-bnet.CPD{bnet.eclass2(bnet.names('SpoofComMes'))}=tabular_CPD(bnet,n+bnet.names('SpoofComMes'),'CPT',cpt1);
-clear cpt; clear cpt1;
 
 %node SpoofComMes slice 2 
 %parent order:{SpoofComMes, NewICS(And)}
@@ -237,26 +217,6 @@ cpt1=mk_named_CPT_inter({'ModComMes', 'MITM', 'ModComMes'},names, bnet.dag, cpt,
 bnet.CPD{bnet.eclass2(bnet.names('ModComMes'))}=tabular_CPD(bnet,n+bnet.names('ModComMes'),'CPT',cpt1);
 clear cpt; clear cpt1;
 
-%node ModComMes slice 2 
-%parent order:{MITM, ModComMes}
-cpt(1,1,:)=[1.0, 0.0];
-cpt(1,2,:)=[0.85763, 0.14237];
-cpt(2,1,:)=[0.0, 1.0];
-cpt(2,2,:)=[0.0, 1.0];
-cpt1=mk_named_CPT_inter({'ModComMes', 'MITM', 'ModComMes'},names, bnet.dag, cpt,[]);
-bnet.CPD{bnet.eclass2(bnet.names('ModComMes'))}=tabular_CPD(bnet,n+bnet.names('ModComMes'),'CPT',cpt1);
-clear cpt; clear cpt1;
-
-%node SpoofRepMes slice 2 
-%parent order:{MITM, SpoofRepMes}
-cpt(1,1,:)=[1.0, 0.0];
-cpt(1,2,:)=[0.82844, 0.17156];
-cpt(2,1,:)=[0.0, 1.0];
-cpt(2,2,:)=[0.0, 1.0];
-cpt1=mk_named_CPT_inter({'SpoofRepMes', 'MITM', 'SpoofRepMes'},names, bnet.dag, cpt,[]);
-bnet.CPD{bnet.eclass2(bnet.names('SpoofRepMes'))}=tabular_CPD(bnet,n+bnet.names('SpoofRepMes'),'CPT',cpt1);
-clear cpt; clear cpt1;
-
 %node SpoofRepMes slice 2 
 %parent order:{MITM, SpoofRepMes}
 cpt(1,1,:)=[1.0, 0.0];
@@ -275,26 +235,6 @@ cpt(2,1,:)=[0.0, 1.0];
 cpt(2,2,:)=[0.0, 1.0];
 cpt1=mk_named_CPT_inter({'ModRepMes', 'MITM', 'ModRepMes'},names, bnet.dag, cpt,[]);
 bnet.CPD{bnet.eclass2(bnet.names('ModRepMes'))}=tabular_CPD(bnet,n+bnet.names('ModRepMes'),'CPT',cpt1);
-clear cpt; clear cpt1;
-
-%node ModRepMes slice 2 
-%parent order:{MITM, ModRepMes}
-cpt(1,1,:)=[1.0, 0.0];
-cpt(1,2,:)=[0.85695, 0.14305];
-cpt(2,1,:)=[0.0, 1.0];
-cpt(2,2,:)=[0.0, 1.0];
-cpt1=mk_named_CPT_inter({'ModRepMes', 'MITM', 'ModRepMes'},names, bnet.dag, cpt,[]);
-bnet.CPD{bnet.eclass2(bnet.names('ModRepMes'))}=tabular_CPD(bnet,n+bnet.names('ModRepMes'),'CPT',cpt1);
-clear cpt; clear cpt1;
-
-%node CorrReact slice 2 
-%parent order:{CorrReact, NotCoherStatus(Or)}
-cpt(1,1,:)=[1.0, 0.0];
-cpt(1,2,:)=[0.5, 0.5];
-cpt(2,1,:)=[0.0, 1.0];
-cpt(2,2,:)=[0.0, 1.0];
-cpt1=mk_named_CPT_inter({'CorrReact', 'NotCoherStatus', 'CorrReact'},names, bnet.dag, cpt,[]);
-bnet.CPD{bnet.eclass2(bnet.names('CorrReact'))}=tabular_CPD(bnet,n+bnet.names('CorrReact'),'CPT',cpt1);
 clear cpt; clear cpt1;
 
 %node CorrReact slice 2 

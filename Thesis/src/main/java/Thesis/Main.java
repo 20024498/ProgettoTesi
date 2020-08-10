@@ -176,7 +176,7 @@ public class Main {
 				tempNodes.add(i);
 			}*/
 			for(int parent :net.getAllNodes())
-				if(net.temporalArcExists(parent, i, 1)){
+				if(net.temporalArcExists(parent, i, 1)&& !tempNodes.contains(i)){
 					cpdNodes.add(i);
 					tempNodes.add(i);
 				}
@@ -187,7 +187,7 @@ public class Main {
 				tempNodes.add(i);
 			}*/
 			for(int parent :net.getAllNodes())
-				if(net.temporalArcExists(parent, i, 1)){
+				if(net.temporalArcExists(parent, i, 1) && !tempNodes.contains(i)){
 					cpdNodes.add(i);
 					tempNodes.add(i);
 				}
