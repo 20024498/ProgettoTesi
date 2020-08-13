@@ -1,12 +1,11 @@
 clear 
 
-h_states = {'ModConLog', 'WrongReact', 'ICSServ', 'ICSMasq', 'SpoofComMes', 'MITM', 'ModComMes', 'SpoofRepMes', 'ModRepMes', 'CorrReact', 'NotCoherStatus(Or)', 'NewICS(And)', 'ICSCompr(Or)'};
-obs = {'Periodic', 'SuspArgICS', 'QuickExecSuspCom', 'CoherentDev'};
+h_states = {'ModConLog', 'WrongReact', 'ICSServ', 'ICSMasq', 'SpoofComMes', 'MITM', 'ModComMes', 'SpoofRepMes', 'ModRepMes', 'CorrReact', 'NotCoherStatus(Or)', 'NewICS(And)', 'ICSCompr(Or)'}obs = {'Periodic', 'SuspArgICS', 'QuickExecSuspCom', 'CoherentDev', };
 names=[h_states, obs];
 
 n=length(names);
 
-intrac={'WrongReact', 'ICSCompr(Or)';
+intrac = {'WrongReact', 'ICSCompr(Or)';
 'ICSServ', 'NewICS(And)';
 'ICSMasq', 'NewICS(And)';
 'ICSMasq', 'SuspArgICS';
@@ -25,7 +24,7 @@ intrac={'WrongReact', 'ICSCompr(Or)';
 
 [intra, names] = mk_adj_mat(intrac, names, 1);
 
-interc={'ModConLog', 'ModConLog';
+interc = {interc = {'ModConLog', 'ModConLog';
 'ModConLog', 'WrongReact';
 'WrongReact', 'WrongReact';
 'ICSServ', 'ICSServ';
@@ -43,8 +42,7 @@ interc={'ModConLog', 'ModConLog';
 'NewICS(And)', 'SpoofComMes'};
 
 inter = mk_adj_mat(interc, names, 0);
-
-ns = [2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2];
+ns = [2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 ];
 
 bnet = mk_dbn(intra, inter, ns, 'names', names);
 
@@ -141,7 +139,7 @@ clear cpt;
 %parent order:{NewICS(And), MITM}
 leak=0.5;
 parents_dn={'NewICS(And)', 'MITM'};
-inh_prob=[1.0, 1.0];
+inh_prob=[0.0, 0.0];
 inh_prob1=mk_named_noisyor(bnet.names('QuickExecSuspCom'),parents_dn,names,bnet.dag,inh_prob);
 bnet.CPD{bnet.names('QuickExecSuspCom')}=noisyor_CPD(bnet, bnet.names('QuickExecSuspCom'),leak, inh_prob1);
 clear inh_prob inh_prob1 leak;

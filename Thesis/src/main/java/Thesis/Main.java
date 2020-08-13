@@ -13,154 +13,57 @@ public class Main {
 	public static void main(String[] args) {
 		
 		
-		//licenza
+		//LICENZA
 		licenseInit();
 		
 		/*TODO LICENZA TRAMITE FILE*/
 		
-		//Inizializzazione rete
+		//INIZIALIZZAZIONE RETE
 		Network net = new Network();
 		net.readFile("net/rete.xdsl");
 		
-		
-		//clear iniziale
+		//INIZIALIZZAZIONE CODICE
 		StringBuilder code = new StringBuilder();
 		code.append("clear \n\n");
 		
-		//variabili nascoste
-		ArrayList<Integer> hStates = new ArrayList<Integer>();
-		code.append("h_states = {");
-		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
-			
-			if(net.getNodeBgColor(h).equals(new Color(229,246,247))) {
-				hStates.add(h);
-				code.append("'"+net.getNodeName(h)+"'");
-				code.append(", ");
-			}
+		//VARIABILI NASCOSTE
+		ArrayList<Integer> hStates = hiddenVariables(net, code);
+	
+		//VARIABILI OSSERVABILI (indicate con un colore diverso da quello di default)
+		ArrayList<Integer> obs = observableVariables(net, code);
+
+		//TEST HIDDEN MARKOV MODEL
+		try {
+			hmmTest(net, hStates, obs);
+			System.out.println("RISPETTA HIDDEN MARKOV MODEL \n");
 		}
-		if(code.length()>=2) {
-			code.deleteCharAt(code.length()-1);
-			code.deleteCharAt(code.length()-1);
+		catch(NotHMMException e) {
+			System.err.println("NON RISPETTA HIDDEN MARKOV MODEL \n");
+			System.err.println(e.getMessage());
 		}
-		code.append("};\n");
 		
-		//variabili osservabili
-		ArrayList<Integer> obs = new ArrayList<Integer>();
-		code.append("obs = {");
-		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
-			
-			if(!net.getNodeBgColor(h).equals(new Color(229,246,247))) {
-				obs.add(h);
-				code.append("'"+net.getNodeName(h)+"'");
-				code.append(", ");
-			}
-		}
-		if(code.length()>=2) {
-			code.deleteCharAt(code.length()-1);
-			code.deleteCharAt(code.length()-1);
-		}
-		code.append("};\n");
-		
-		//test markovianità rete
-		if(!isMarkovian(net, hStates, obs))
-			System.err.println("NON E' MARKOVIANA");
-		else
-			System.out.println("E' MARKOVIANA");
-		
-		//insieme dei nomi
+		//INSIEME DEI NOMI
 		code.append("names=[h_states, obs];\n\n");
 		
-		//numero di nodi
+		//NUMERO DI NODI
 		code.append("n=length(names);\n\n");
 		
-		//archi intraslice
-		code.append("intrac={");
+		//ARCHI INTRASLICE
+		intrasliceArcs(net, code);
 		
-		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
-			int[] children;
-			if((children = net.getChildren(h)).length>0) 
-				for(Integer i : children) {
-					code.append("'"+net.getNodeName(h)+"'");
-					code.append(", ");
-					code.append("'"+net.getNodeName(i)+"'");
-					code.append(";\n");
-				}	
-		}
-		if(code.length()>=2) {
-			code.deleteCharAt(code.length()-1);
-			code.deleteCharAt(code.length()-1);
-		}
-		
-		
-	
-		
-		code.append("};\n\n");
-		
-		//matrice adiacenza archi intraslice
+		//MATRICE DI ADIACENZA ARCHI INTRASLICE
 		code.append("[intra, names] = mk_adj_mat(intrac, names, 1);\n\n");
 		
-		//archi interslice
-		code.append("interc={");
+		//ARCHI INTERSLICE (SOLO ORDINE 1)
+		intersliceArcs(net, code);
 		
-		/*
-		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
-			
-			TemporalInfo[] tChildren;
-			
-			tChildren = net.getTemporalChildren(h);
-			
-			
-			if(tChildren.length>0)
-				for(TemporalInfo i : tChildren) {
-					code.append("'"+net.getNodeName(h)+"'");
-					code.append(", ");
-					code.append("'"+net.getNodeName(i.handle)+"'");
-					code.append(";\n");
-				}
-			
-			
-		}
-		
-		if(code.length()>=2) {
-			code.deleteCharAt(code.length()-1);
-			code.deleteCharAt(code.length()-1);
-		}
-		*/
-		//DA QUI
-		boolean temp = false;
-		for (int h : net.getAllNodes()) {
-			for (int k : net.getAllNodes()) {
-				if(net.temporalArcExists(h, k, 1)) {
-					code.append("'"+net.getNodeName(h)+"'");
-					code.append(", ");
-					code.append("'"+net.getNodeName(k)+"'");
-					code.append(";\n");
-					temp = true;
-				}	
-			}
-		}
-		if(temp==true) {
-			code.deleteCharAt(code.length()-1);
-			code.deleteCharAt(code.length()-1);
-		}
-		
-		
-		// A QUI
-		
-		code.append("};\n\n");
-		
-		//matrice adiacenza archi interslice
+		//MATRICE DI ADIACENZA ARCHI INTERSLICE
 		code.append("inter = mk_adj_mat(interc, names, 0);\n\n");
 		
-		//numero di stati i-esima variabile
-		code.append("ns = [");
-		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) 
-			code.append(net.getOutcomeCount(h)+" ");
-		if(code.length()>=1)
-			code.deleteCharAt(code.length()-1);
-		code.append("];\n\n");
-		
-		//creazione rete bayesiana
+		//NUMERO DI STATI DI CIASCUN NODO
+		numberOfStates(net, code);
+	
+		//CREAZIONE RETE BAYESIANA
 		code.append("bnet = mk_dbn(intra, inter, ns, 'names', names);\n\n");
 		
 		//creazione lista node di cui calcolare cpd
@@ -292,6 +195,9 @@ public class Main {
 				}
 				else {
 					//Per ora niente archi temporali
+					printTempNoisyMax(net, h, code);
+				
+				
 				}// occorre creare funzione su matlab ?
 			}
 			
@@ -308,8 +214,134 @@ public class Main {
 	
 	
 	
+	private static ArrayList<Integer> hiddenVariables(Network net, StringBuilder code){
+		ArrayList<Integer> hStates = new ArrayList<Integer>();
+		String init = "h_states = {";
+		StringBuilder str = new StringBuilder (init);
+		
+		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
+			if(net.getNodeBgColor(h).equals(new Color(229,246,247))) {
+				hStates.add(h);
+				str.append("'"+net.getNodeName(h)+"'");
+				str.append(", ");
+			}
+		}
+		
+		if(str.length()>init.length()) 
+			truncList(str, 2);
+		
+		code.append(str);
+		code.append("};\n");
+		
+		return hStates;
+	}
+	
+	private static ArrayList<Integer> observableVariables(Network net, StringBuilder code){
+		ArrayList<Integer> obs = new ArrayList<Integer>();
+		String init = "obs = {";
+		StringBuilder str = new StringBuilder (init);
+		
+		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
+			
+			if(!net.getNodeBgColor(h).equals(new Color(229,246,247))) {
+				obs.add(h);
+				str.append("'"+net.getNodeName(h)+"'");
+				str.append(", ");
+			}
+		}
+		if(str.length()>init.length()) 
+			truncList(code, 2);
+		
+		code.append(str);
+		code.append("};\n");
+		
+		return obs;
+	}
 	
 	
+	private static void hmmTest(Network net,ArrayList<Integer> hStates, ArrayList<Integer> obs) throws NotHMMException {
+		
+		if(hStates.isEmpty())
+			throw new NotHMMException("Nessuno stato nascosto trovato");
+		if(obs.isEmpty())
+			throw new NotHMMException("Nessuno stato osservabile trovato");
+		for(Integer i : hStates)
+			if(net.getMaxNodeTemporalOrder(i)>1)
+				throw new NotHMMException("Archi temporali di ordine maggiore di 1 rilevati tra gli stati nascosti");
+		for(Integer i : obs)
+			if(net.getMaxNodeTemporalOrder(i)>0)
+				throw new NotHMMException("Archi temporali rilevati tra gli osservabili");
+		for(Integer h : hStates)
+			for(Integer p : net.getParents(h))
+				if(net.temporalArcExists(p, h, 0))
+					throw new NotHMMException("Archi temporali rilevati tra stati nascosti e osservabili");
+					
+	}
+	
+	private static void intrasliceArcs(Network net, StringBuilder code) {
+		
+		
+		String init = "intrac = {";
+		StringBuilder str = new StringBuilder (init);
+		
+		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
+			int[] children;
+			if((children = net.getChildren(h)).length>0) 
+				for(Integer i : children) {
+					str.append("'"+net.getNodeName(h)+"'");
+					str.append(", ");
+					str.append("'"+net.getNodeName(i)+"'");
+					str.append(";\n");
+				}	
+		}
+		if(str.length()>init.length()) 
+			truncList(str, 2);
+		
+		code.append(str);
+		code.append("};\n\n");
+	}
+	
+	private static void intersliceArcs(Network net, StringBuilder code) {
+		
+		String init = "interc = {";
+		StringBuilder str = new StringBuilder (init);
+		
+		code.append("interc = {");
+		
+		boolean temp = false;
+		for (int p : net.getAllNodes()) {
+			for (int c : net.getAllNodes()) {
+				if(net.temporalArcExists(p, c, 1)) {
+					str.append("'"+net.getNodeName(p)+"'");
+					str.append(", ");
+					str.append("'"+net.getNodeName(c)+"'");
+					str.append(";\n");
+					temp = true;
+				}	
+			}
+		}
+		
+		if(temp==true) 
+			truncList(str, 2);
+		
+		code.append(str);
+		code.append("};\n\n");
+		
+	}
+	
+	private static void numberOfStates (Network net, StringBuilder code) {
+		
+		String init = "ns = [";
+		StringBuilder str = new StringBuilder (init);
+
+		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) 
+			str.append(net.getOutcomeCount(h)+" ");
+		if(str.length()>init.length())
+			truncList(code, 1);
+		
+		code.append(str);
+		code.append("];\n\n");
+	}
 	
 	
 	//SOLO STATI BINARI
@@ -478,24 +510,7 @@ public class Main {
 				code.append("}\n");
 			}
 			
-			private static boolean isMarkovian(Network net,ArrayList<Integer> hStates, ArrayList<Integer> obs) {
-				if(hStates.isEmpty())
-					return false;
-				if(obs.isEmpty())
-					return false;
-				for(Integer i : hStates)
-					if(net.getMaxNodeTemporalOrder(i)>1)
-						return false;
-				for(Integer i : obs)
-					if(net.getMaxNodeTemporalOrder(i)>0)
-						return false;
-				for(Integer h : hStates)
-					for(Integer p : net.getParents(h))
-						if(net.temporalArcExists(p, h, 0))
-							return false;
-				return true;
-							
-			}
+
 			
 			private static boolean checkNoisyOr(Network net, int nodeHandle) {
 				if(net.getNodeType(nodeHandle) != Network.NodeType.NOISY_MAX)
@@ -523,7 +538,7 @@ public class Main {
 				code.append("};\n");
 				code.append("inh_prob=[");
 				for(int d =1; d<defs.length-2;d+=4)
-					code.append(defs[d]+", ");
+					code.append((1-defs[d])+", ");
 				code.deleteCharAt(code.length()-1);
 				code.deleteCharAt(code.length()-1);
 				code.append("];\n");
@@ -572,6 +587,7 @@ public class Main {
 				for(double e : exp)
 					System.err.println(e);
 				
+				
 				/*
 				double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
 				TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
@@ -600,6 +616,10 @@ public class Main {
 					code.append("];\n");
 				}		
 				*/
+			}
+			
+			private static void truncList (StringBuilder code, int delChar) {
+				code.setLength(code.length()-delChar);
 			}
 			
 			private static void printInference(StringBuilder code) {
@@ -705,6 +725,13 @@ public class Main {
 						"		fprintf('Node %i:%s observed at value: %i\\n**\\n',i,names{i-n}, evidence{i-n,T});\n" + 
 						"	end\n" + 
 						"end");
+			}
+			
+			
+			private static class NotHMMException extends Exception{
+				public NotHMMException(String message) {
+					super(message);
+				}
 			}
 			
 	
