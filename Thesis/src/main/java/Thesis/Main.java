@@ -250,7 +250,7 @@ public class Main {
 			}
 		}
 		if(str.length()>init.length()) 
-			truncList(code, 2);
+			truncList(str, 2);
 		
 		code.append(str);
 		code.append("};\n");
@@ -306,8 +306,6 @@ public class Main {
 		String init = "interc = {";
 		StringBuilder str = new StringBuilder (init);
 		
-		code.append("interc = {");
-		
 		boolean temp = false;
 		for (int p : net.getAllNodes()) {
 			for (int c : net.getAllNodes()) {
@@ -337,7 +335,7 @@ public class Main {
 		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) 
 			str.append(net.getOutcomeCount(h)+" ");
 		if(str.length()>init.length())
-			truncList(code, 1);
+			truncList(str, 1);
 		
 		code.append(str);
 		code.append("];\n\n");

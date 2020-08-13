@@ -1,6 +1,7 @@
 clear 
 
-h_states = {'ModConLog', 'WrongReact', 'ICSServ', 'ICSMasq', 'SpoofComMes', 'MITM', 'ModComMes', 'SpoofRepMes', 'ModRepMes', 'CorrReact', 'NotCoherStatus(Or)', 'NewICS(And)', 'ICSCompr(Or)'}obs = {'Periodic', 'SuspArgICS', 'QuickExecSuspCom', 'CoherentDev', };
+h_states = {'ModConLog', 'WrongReact', 'ICSServ', 'ICSMasq', 'SpoofComMes', 'MITM', 'ModComMes', 'SpoofRepMes', 'ModRepMes', 'CorrReact', 'NotCoherStatus(Or)', 'NewICS(And)', 'ICSCompr(Or)'};
+obs = {'Periodic', 'SuspArgICS', 'QuickExecSuspCom', 'CoherentDev'};
 names=[h_states, obs];
 
 n=length(names);
@@ -24,7 +25,7 @@ intrac = {'WrongReact', 'ICSCompr(Or)';
 
 [intra, names] = mk_adj_mat(intrac, names, 1);
 
-interc = {interc = {'ModConLog', 'ModConLog';
+interc = {'ModConLog', 'ModConLog';
 'ModConLog', 'WrongReact';
 'WrongReact', 'WrongReact';
 'ICSServ', 'ICSServ';
@@ -42,7 +43,8 @@ interc = {interc = {'ModConLog', 'ModConLog';
 'NewICS(And)', 'SpoofComMes'};
 
 inter = mk_adj_mat(interc, names, 0);
-ns = [2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 ];
+
+ns = [2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2];
 
 bnet = mk_dbn(intra, inter, ns, 'names', names);
 
