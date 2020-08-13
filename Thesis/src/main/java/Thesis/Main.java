@@ -66,55 +66,33 @@ public class Main {
 		//CREAZIONE RETE BAYESIANA
 		code.append("bnet = mk_dbn(intra, inter, ns, 'names', names);\n\n");
 		
-		//creazione lista node di cui calcolare cpd
+		//CREAZIONE LISTE NODI DI CUI CALCOLARE CPD
 		ArrayList<Integer> tempNodes = new ArrayList<Integer>();
 		ArrayList<Integer> cpdNodes = new ArrayList<Integer>();
-		for(Integer i : hStates)
-			cpdNodes.add(i);
-		for(Integer i : obs)
-			cpdNodes.add(i);
-		for(Integer i : hStates) 
-			/*if((net.getTemporalParents(i, 1)).length!=0) {
-				cpdNodes.add(i);
-				tempNodes.add(i);
-			}*/
-			for(int parent :net.getAllNodes())
-				if(net.temporalArcExists(parent, i, 1)&& !tempNodes.contains(i)){
-					cpdNodes.add(i);
-					tempNodes.add(i);
-				}
-						
-		for(Integer i : obs) //necessario?
-			/*if((net.getTemporalParents(i, 1)).length!=0){
-				cpdNodes.add(i);
-				tempNodes.add(i);
-			}*/
-			for(int parent :net.getAllNodes())
-				if(net.temporalArcExists(parent, i, 1) && !tempNodes.contains(i)){
-					cpdNodes.add(i);
-					tempNodes.add(i);
-				}
+		cpdNodesCalc(net, hStates, obs, cpdNodes, tempNodes);
 		
-		
-		//calcolo cpd
+		//CICLO CALCOLO CPD
 		int tresh = cpdNodes.size() - tempNodes.size();
 		for(int i =0; i<cpdNodes.size();i++) {
+			
 			if(i==tresh)
 				code.append("\n\n%%%%%%%%% ------- slice 2\n\n");
-			int h=cpdNodes.get(i);
-			// nodo probabilistico
+			
+			int h = cpdNodes.get(i);
+			
+			// NODO PROBABILISTICO
 			if(net.getNodeType(h) == Network.NodeType.CPT) {
-				// nodo senza archi temporali entranti
+				
+				// NO ARCHI TEMPORALI ENTRANTI
 				if(i<tresh) {
 					
 					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
 					printParentOrder(net, h, code);
 					myCpdPrint(net, h,code);
 					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
-					code.append("clear cpt;\n\n");
-					
+					code.append("clear cpt;\n\n");		
 				}
-				//nodo con archi tempoali entranti
+				// ARCHI TEMPORALI ENTRANTI
 				else {
 					
 					code.append("%node "+net.getNodeName(h)+" slice 2 \n");
@@ -132,32 +110,37 @@ public class Main {
 					
 			}
 			
+			// NODO DETERMINISTICO
 			if(net.getNodeType(h) == Network.NodeType.TRUTH_TABLE) {
 				
+				// NO ARCHI TEMPORALI ENTRANTI
 				if(i<tresh) {
 					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
 					printParentOrder(net, h, code);
 					
+					// NODO DI TIPO OR
 					if(checkOR(net, h,code)) {
 						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
 						code.append("'any');\n");
-						
 					}
+					// NODO DI TIPO AND
 					else if(checkAND(net, h,code)) {
 						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
 						code.append("'all');\n");
 					}
+					//NODI DETERMINISTICI GENERICI
 					else {
-						//NODI DETERMINISTICI GENERICI
 						myCpdPrint(net, h,code);
 						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
 					}
 					
 					code.append("clear cpt;\n\n");
 				}
+				
+				//ARCHI TEMPORALI ENTRANTI
 				else {
 					
-					// NODO DETERMINISTICO CON ARCHI TEMPORALI ENTRANTI
+					// NODO DETERMINISTICO GENERICO
 					code.append("%node "+net.getNodeName(h)+" slice 2 \n");
 					printParentOrder(net, h, code);
 					myTempCpdPrint(net, h,code);
@@ -171,36 +154,40 @@ public class Main {
 					code.append("\n\n");
 				}
 			}
-				
+			
+			// NODO RUMOROSO
 			if(net.getNodeType(h) == Network.NodeType.NOISY_MAX) {
 				
-				
+				//NO ARCHI TEMPORALI ENTRANTI
 				if(i<tresh) {
 					
+					//NODO DI TIPO NOISY-OR
 					if(checkNoisyOr(net,h)) {
-						
-						//NOISY OR
 						code.append("%node "+net.getNodeName(h)+" slice 1 \n");
 						printParentOrder(net, h, code);
 						printNoisyOr(net,h,code);
 					}
-					else { //NOISY MAX
+					
+					//NODO DI TIPO NOISY MAX
+					else { 
 						code.append("%node "+net.getNodeName(h)+" slice 1 \n");
 						printParentOrder(net, h, code);
 						printNoisyMax(net, h, code);
 						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
 						code.append("clear cpt;\n\n");
-					}
-					
+					}	
 				}
+				
+				//ARCHI TEMPORALI ENTRANTI
 				else {
-					//Per ora niente archi temporali
+					// TODO Per ora niente archi temporali, solo test, occorre creare funzione su matlab ?
+					
+					//NODO DI TIPO NOISY-OR
+					printTempNoisyOr(net, h, code);
+					//NODO DI TIPO NOISY MAX
 					printTempNoisyMax(net, h, code);
-				
-				
-				}// occorre creare funzione su matlab ?
-			}
-			
+				}
+			}	
 		}
 			
 		//Inferenza
@@ -280,7 +267,6 @@ public class Main {
 	
 	private static void intrasliceArcs(Network net, StringBuilder code) {
 		
-		
 		String init = "intrac = {";
 		StringBuilder str = new StringBuilder (init);
 		
@@ -318,7 +304,6 @@ public class Main {
 				}	
 			}
 		}
-		
 		if(temp==true) 
 			truncList(str, 2);
 		
@@ -341,6 +326,28 @@ public class Main {
 		code.append("];\n\n");
 	}
 	
+	private static void cpdNodesCalc(Network net, ArrayList<Integer> hStates, ArrayList<Integer> obs, ArrayList<Integer> cpdNodes, ArrayList<Integer> tempNodes ) {
+		
+		for(Integer i : hStates)
+			cpdNodes.add(i);
+		
+		for(Integer i : obs)
+			cpdNodes.add(i);
+		
+		for(Integer i : hStates) 
+			for(int parent :net.getAllNodes())
+				if(net.temporalArcExists(parent, i, 1)&& !tempNodes.contains(i)){
+					cpdNodes.add(i);
+					tempNodes.add(i);
+				}
+						
+		for(Integer i : obs) //necessario?
+			for(int parent :net.getAllNodes())
+				if(net.temporalArcExists(parent, i, 1) && !tempNodes.contains(i)){
+					cpdNodes.add(i);
+					tempNodes.add(i);
+				}
+	}
 	
 	//SOLO STATI BINARI
 	//l'output corrispondente allo stato falso deve essere messo per primo
@@ -469,11 +476,10 @@ public class Main {
 						writer = new BufferedWriter(new FileWriter(fileName));
 						writer.write(code);
 					    writer.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					}
-				    
+					catch (IOException e) {
+						e.printStackTrace();
+					}  
 			}
 			
 			private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
@@ -576,7 +582,13 @@ public class Main {
 				
 			}
 			
+			private static void printTempNoisyOr(Network net, int nodeHandle,StringBuilder code) {
+				//TODO
+			}
+			
 			private static void printTempNoisyMax(Network net, int nodeHandle,StringBuilder code) {
+				
+				//TODO
 				double[] temp = net.getNodeTemporalDefinition(nodeHandle, 1); 
 				double[] exp = net.getNoisyExpandedDefinition(nodeHandle);
 				for(double t : temp)
@@ -584,7 +596,6 @@ public class Main {
 				System.err.println();
 				for(double e : exp)
 					System.err.println(e);
-				
 				
 				/*
 				double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
