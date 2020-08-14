@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import smile.*;
@@ -153,7 +154,7 @@ public class Main {
 		}
 			
 		//INFERENZA
-		printInference(code,"JT",true,11,1,true);
+		printInference(net,code,"JT",true,11,1,true);
 		
 		//FILE DI OUTPUT
 		saveFile(code.toString());
@@ -488,7 +489,31 @@ public class Main {
 		}  
 	}
 	
-	private static void printInference(StringBuilder code,String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
+	private static void printEvidence(Network net, StringBuilder code){
+		
+		ArrayList<TemporalEvidence> evidences = new ArrayList<TemporalEvidence>();
+		for(int t=0;t<net.getSliceCount();t++) 
+			for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) 
+				if(net.hasTemporalEvidence(h)) 
+					evidences.add(new TemporalEvidence(t, net.getNodeId(h), net.getTemporalEvidence(h, t)+1));	
+			
+		boolean slicePrinted = false;
+		int slice=0;
+		for(TemporalEvidence e : evidences) { 
+			if(e.timeSlice>slice)
+				slicePrinted=false;
+			if(!slicePrinted) {
+				slice = e.timeSlice;
+				slicePrinted = true;
+				code.append("t="+slice+";\n");
+			}
+			code.append("evidence{bnet.names('"+e.name+"'),t+1}="+e.state+"; \n");
+		}
+	}
+	
+	
+	
+	private static void printInference(Network net, StringBuilder code,String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
 		
 		code.append("% choose the inference engine\n" + 
 				"ec='"+ inferenceEngine +"';\n" + 
@@ -514,15 +539,20 @@ public class Main {
 				"evidence=cell(n,T); % create the evidence cell array\n" + 
 				"\n" + 
 				"% Evidence\n" + 
-				"% first cells of evidence are for time 0\n" + 
-				"t=5;\n" + 
+				"% first cells of evidence are for time 0\n");  
+				
+		printEvidence(net, code);
+			
+		code.append("t=5;\n" + 
 				"evidence{bnet.names('Periodic'),t+1}=1; \n" + 
 				"t=6;\n" + 
 				"evidence{bnet.names('Periodic'),t+1}=2;\n" + 
 				"evidence{bnet.names('SuspArgICS'),t+1}=2;\n" + 
 				"t=7;\n" + 
-				"evidence{bnet.names('CoherentDev'),t+1}=2;\n" + 
-				"% Campo Algoritmo di Inferenza  (filtering / smoothing)\n" + 
+				"evidence{bnet.names('CoherentDev'),t+1}=2;\n");  
+				
+				
+		code.append("% Campo Algoritmo di Inferenza  (filtering / smoothing)\n" + 
 				"filtering="+((filtering==true)?"1":"0")+";\n" + 
 				"% filtering=0 --> smoothing (is the default - enter_evidence(engine,evidence))\n" + 
 				"% filtering=1 --> filtering\n" + 
@@ -625,7 +655,7 @@ public class Main {
 		}while(fi!='F' || fi!='S');
 		
 		scanner.close();
-		printInference(code, ec, (ff=='Y')?true:false, tSpan, tStep, (fi=='F')?true:false);
+		printInference(net,code, ec, (ff=='Y')?true:false, tSpan, tStep, (fi=='F')?true:false);
 		
 	}
 	
@@ -795,6 +825,19 @@ public class Main {
 				public NotHMMException(String message) {
 					super(message);
 				}
+			}
+			
+			private static class TemporalEvidence {
+				
+				private int timeSlice;
+				private String name;
+				private int state;
+				
+				public TemporalEvidence(int timeSlice,String name,int state) {
+					this.timeSlice=timeSlice;
+					this.name=name;
+					this.state=state;
+				}	
 			}
 			
 	
