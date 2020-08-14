@@ -5,6 +5,8 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
 
 import smile.*;
 
@@ -84,30 +86,12 @@ public class Main {
 			if(net.getNodeType(h) == Network.NodeType.CPT) {
 				
 				// NO ARCHI TEMPORALI ENTRANTI
-				if(i<tresh) {
-					
-					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
-					printParentOrder(net, h, code);
-					myCpdPrint(net, h,code);
-					code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
-					code.append("clear cpt;\n\n");		
-				}
+				if(i<tresh) 
+					printTabularCpd(net, h, code);		
+				
 				// ARCHI TEMPORALI ENTRANTI
-				else {
-					
-					code.append("%node "+net.getNodeName(h)+" slice 2 \n");
-					printParentOrder(net, h, code);
-					myTempCpdPrint(net, h,code);
-					boolean moreTemporalParents = net.getTemporalParents(h, 1).length>1;
-					if(moreTemporalParents)
-						cpt1Print(net, h, code);
-					code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(h)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(h)+"'),'CPT',"+(moreTemporalParents?"cpt1":"cpt")+");\n");
-					code.append("clear cpt; ");
-					if(moreTemporalParents) 
-						code.append("clear cpt1;");
-					code.append("\n\n");
-				}
-					
+				else 
+					printTempTabularCpd(net, h, code);			
 			}
 			
 			// NODO DETERMINISTICO
@@ -115,43 +99,26 @@ public class Main {
 				
 				// NO ARCHI TEMPORALI ENTRANTI
 				if(i<tresh) {
-					code.append("%node "+net.getNodeName(h)+" slice 1 \n");
-					printParentOrder(net, h, code);
 					
 					// NODO DI TIPO OR
 					if(checkOR(net, h,code)) {
-						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
-						code.append("'any');\n");
+						printBooleanCpdOR(net, h, code);
 					}
 					// NODO DI TIPO AND
 					else if(checkAND(net, h,code)) {
-						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'named',");
-						code.append("'all');\n");
+						printBooleanCpdAND(net, h, code);
 					}
 					//NODI DETERMINISTICI GENERICI
 					else {
-						myCpdPrint(net, h,code);
-						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
-					}
-					
-					code.append("clear cpt;\n\n");
+						printTabularCpd(net, h, code);
+					}	
 				}
 				
 				//ARCHI TEMPORALI ENTRANTI
 				else {
 					
 					// NODO DETERMINISTICO GENERICO
-					code.append("%node "+net.getNodeName(h)+" slice 2 \n");
-					printParentOrder(net, h, code);
-					myTempCpdPrint(net, h,code);
-					boolean moreTemporalParents = net.getTemporalParents(h, 1).length>1;
-					if(moreTemporalParents)
-						cpt1Print(net, h, code);
-					code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(h)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(h)+"'),'CPT',"+(moreTemporalParents?"cpt1":"cpt")+");\n");
-					code.append("clear cpt; ");
-					if(moreTemporalParents) 
-						code.append("clear cpt1;");
-					code.append("\n\n");
+					printTempTabularCpd(net, h, code);	
 				}
 			}
 			
@@ -162,20 +129,12 @@ public class Main {
 				if(i<tresh) {
 					
 					//NODO DI TIPO NOISY-OR
-					if(checkNoisyOr(net,h)) {
-						code.append("%node "+net.getNodeName(h)+" slice 1 \n");
-						printParentOrder(net, h, code);
+					if(checkNoisyOr(net,h)) 
 						printNoisyOr(net,h,code);
-					}
 					
 					//NODO DI TIPO NOISY MAX
-					else { 
-						code.append("%node "+net.getNodeName(h)+" slice 1 \n");
-						printParentOrder(net, h, code);
-						printNoisyMax(net, h, code);
-						code.append("bnet.CPD{bnet.names('"+net.getNodeName(h)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(h)+"'),'CPT',cpt);\n");
-						code.append("clear cpt;\n\n");
-					}	
+					else 
+						printNoisyMax(net, h, code);		
 				}
 				
 				//ARCHI TEMPORALI ENTRANTI
@@ -183,17 +142,20 @@ public class Main {
 					// TODO Per ora niente archi temporali, solo test, occorre creare funzione su matlab ?
 					
 					//NODO DI TIPO NOISY-OR
-					printTempNoisyOr(net, h, code);
+					if(checkTempNoisyOr(net, h, code)) 
+						printTempNoisyOr(net, h, code);
+					
 					//NODO DI TIPO NOISY MAX
-					printTempNoisyMax(net, h, code);
+					else 
+						printTempNoisyMax(net, h, code);
 				}
 			}	
 		}
 			
-		//Inferenza
-		printInference(code);
+		//INFERENZA
+		printInference(code,"JT",true,11,1,true);
 		
-		//File di output
+		//FILE DI OUTPUT
 		saveFile(code.toString());
 		System.out.println(code.toString());	
 			
@@ -349,6 +311,328 @@ public class Main {
 				}
 	}
 	
+	private static void printTabularCpd(Network net, int nodeHandle,StringBuilder code) {
+		
+		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		printParentOrder(net, nodeHandle, code);
+		myCpdPrint(net, nodeHandle,code);
+		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(nodeHandle)+"'),'CPT',cpt);\n");
+		code.append("clear cpt;\n\n");	
+	}
+	
+	private static void printTempTabularCpd(Network net, int nodeHandle,StringBuilder code) {
+		
+		code.append("%node "+net.getNodeName(nodeHandle)+" slice 2 \n");
+		printParentOrder(net, nodeHandle, code);
+		myTempCpdPrint(net, nodeHandle,code);
+		boolean moreTemporalParents = net.getTemporalParents(nodeHandle, 1).length>1;
+		if(moreTemporalParents)
+			cpt1Print(net, nodeHandle, code);
+		code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(nodeHandle)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(nodeHandle)+"'),'CPT',"+(moreTemporalParents?"cpt1":"cpt")+");\n");
+		code.append("clear cpt; ");
+		if(moreTemporalParents) 
+			code.append("clear cpt1;");
+		code.append("\n\n");
+	}
+	
+	private static void printBooleanCpdAND (Network net, int nodeHandle,StringBuilder code) {
+		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		printParentOrder(net, nodeHandle, code);
+		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(nodeHandle)+"'),'named',");
+		code.append("'all');\n");
+		code.append("clear cpt;\n\n");
+	}
+	
+	private static void printBooleanCpdOR (Network net, int nodeHandle,StringBuilder code) {
+		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		printParentOrder(net, nodeHandle, code);
+		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(nodeHandle)+"'),'named',");
+		code.append("'any');\n");
+		code.append("clear cpt;\n\n");
+	}
+	
+	
+	private static boolean checkNoisyOr(Network net, int nodeHandle) {
+		if(net.getNodeType(nodeHandle) != Network.NodeType.NOISY_MAX)
+			return false;
+		int parents[] = net.getParents(nodeHandle);
+		for(int p : parents)
+			if(net.getOutcomeCount(p)>2)
+				return false;
+		if(net.getOutcomeCount(nodeHandle)>2)
+			return false;
+		
+		return true;
+	}
+	
+	private static void printNoisyOr(Network net, int nodeHandle,StringBuilder code) {
+		
+		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		printParentOrder(net, nodeHandle, code);
+		code.append("leak=");
+		double[] defs = net.getNodeDefinition(nodeHandle);
+		code.append(defs[defs.length-2]+";\n");
+		code.append("parents_dn={");
+		for(int p : net.getParents(nodeHandle))
+			code.append("'"+net.getNodeName(p)+"'"+", ");
+		code.deleteCharAt(code.length()-1);
+		code.deleteCharAt(code.length()-1);
+		code.append("};\n");
+		code.append("inh_prob=[");
+		for(int d =1; d<defs.length-2;d+=4)
+			code.append((1-defs[d])+", ");
+		code.deleteCharAt(code.length()-1);
+		code.deleteCharAt(code.length()-1);
+		code.append("];\n");
+		code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(nodeHandle)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
+		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(nodeHandle)+"'),leak, inh_prob1);\n");
+		code.append("clear inh_prob inh_prob1 leak;\n\n");
+	}
+	
+	private static void printNoisyMax(Network net, int nodeHandle,StringBuilder code) {
+		
+		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		printParentOrder(net, nodeHandle, code);
+		double[] cpt = net.getNoisyExpandedDefinition(nodeHandle);
+		int[] parents = net.getParents(nodeHandle); 
+		int[] pIndex = new int[parents.length];
+		int[] coords = new int[parents.length];
+		
+		int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
+		for(int i=0; i<totCptColumn;i++) {
+			code.append("cpt(");
+			if(parents.length==0)
+				code.append(":,");
+			int prod = 1;
+			for(int j=parents.length-1;j>=0;j--) {
+				coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j])));
+				prod*=net.getOutcomeCount(parents[j]);
+				
+			}
+			for(int k =0; k<parents.length;k++)
+				code.append(coords[k]+1 +",");
+			
+			code.append(":)=[");
+			for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
+				code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
+			code.deleteCharAt(code.length()-1);
+			code.deleteCharAt(code.length()-1);
+			code.append("];\n");
+		}
+		
+		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(nodeHandle)+"'),'CPT',cpt);\n");
+		code.append("clear cpt;\n\n");
+		
+	}
+	
+	private static boolean checkTempNoisyOr(Network net, int nodeHandle,StringBuilder code){
+		//TODO
+		return true;
+	}			
+	private static void printTempNoisyOr(Network net, int nodeHandle,StringBuilder code) {
+		code.append("%node "+net.getNodeName(nodeHandle)+" slice 2 \n");
+		//TODO
+	}
+	
+	private static void printTempNoisyMax(Network net, int nodeHandle,StringBuilder code) {
+		
+		code.append("%node "+net.getNodeName(nodeHandle)+" slice 2 \n");
+		
+		//TODO
+		double[] temp = net.getNodeTemporalDefinition(nodeHandle, 1); 
+		double[] exp = net.getNoisyExpandedDefinition(nodeHandle);
+		for(double t : temp)
+			System.err.println(t);
+		System.err.println();
+		for(double e : exp)
+			System.err.println(e);
+		
+		/*
+		double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
+		TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
+		int[] pIndex = new int[parents.length];
+		int[] coords = new int[parents.length];
+		
+		int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
+		for(int i=0; i<totCptColumn;i++) {
+			code.append("cpt(");
+			if(parents.length==0)
+				code.append(":,");
+			int prod = 1;
+			for(int j=parents.length-1;j>=0;j--) {
+				coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j].handle)));
+				prod*=net.getOutcomeCount(parents[j].handle);
+				
+			}
+			for(int k =0; k<parents.length;k++)
+				code.append(coords[k]+1 +",");
+			
+			code.append(":)=[");
+			for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
+				code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
+			code.deleteCharAt(code.length()-1);
+			code.deleteCharAt(code.length()-1);
+			code.append("];\n");
+		}		
+		*/
+	}
+	
+	private static void saveFile(String code) {
+		
+		String fileName = "MatlabScript.m";
+	    BufferedWriter writer;
+		try {
+			writer = new BufferedWriter(new FileWriter(fileName));
+			writer.write(code);
+		    writer.close();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}  
+	}
+	
+	private static void printInference(StringBuilder code,String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
+		
+		code.append("% choose the inference engine\n" + 
+				"ec='"+ inferenceEngine +"';\n" + 
+				"\n" + 
+				"% ff=0 --> no fully factorized  OR ff=1 --> fully factorized\n" + 
+				"ff="+((fullyFactorized==true)?"1":"0")+";\n" + 
+				"\n" + 
+				"% list of clusters\n" + 
+				"if (ec=='JT')\n" + 
+				"	engine=bk_inf_engine(bnet, 'clusters', 'exact'); %exact inference\n" + 
+				"else\n" + 
+				"	if (ff==1)\n" + 
+				"		engine=bk_inf_engine(bnet, 'clusters', 'ff'); % fully factorized\n" + 
+				"	else\n" + 
+				"		clusters={[]};\n" + 
+				"		engine=bk_inf_engine(bnet, 'clusters', clusters);\n" + 
+				"	end\n" + 
+				"end\n" + 
+				"\n" + 
+				"% IMPORTANT: DrawNet start slices from 0,\n" + 
+				"T="+timeSpan+"; %max time span (from XML file campo Time Slice) thus from 0 to T-1\n" + 
+				"tStep="+timeStep+"; %from  XML file campo Time Step\n" + 
+				"evidence=cell(n,T); % create the evidence cell array\n" + 
+				"\n" + 
+				"% Evidence\n" + 
+				"% first cells of evidence are for time 0\n" + 
+				"t=5;\n" + 
+				"evidence{bnet.names('Periodic'),t+1}=1; \n" + 
+				"t=6;\n" + 
+				"evidence{bnet.names('Periodic'),t+1}=2;\n" + 
+				"evidence{bnet.names('SuspArgICS'),t+1}=2;\n" + 
+				"t=7;\n" + 
+				"evidence{bnet.names('CoherentDev'),t+1}=2;\n" + 
+				"% Campo Algoritmo di Inferenza  (filtering / smoothing)\n" + 
+				"filtering="+((filtering==true)?"1":"0")+";\n" + 
+				"% filtering=0 --> smoothing (is the default - enter_evidence(engine,evidence))\n" + 
+				"% filtering=1 --> filtering\n" + 
+				"if ~filtering\n" + 
+				"	fprintf('\\n*****  SMOOTHING *****\\n\\n');\n" + 
+				"else\n" + 
+				"	fprintf('\\n*****  FILTERING *****\\n\\n');\n" + 
+				"end\n" + 
+				"\n" + 
+				"[engine, loglik] = enter_evidence(engine, evidence, 'filter', filtering);\n" + 
+				"\n" + 
+				"% analysis time is t for anterior nodes and t+1 for ulterior nodes\n" + 
+				"for t=1:tStep:T-1\n" + 
+				"%t = analysis time\n" + 
+				"\n" + 
+				"% create the vector of marginals\n" + 
+				"% marg(i).T is the posterior distribution of node T\n" + 
+				"% with marg(i).T(false) and marg(i).T(true)\n" + 
+				"\n" + 
+				"% NB. if filtering then ulterior nodes cannot be marginalized at time t=1\n" + 
+				"\n" + 
+				"if ~filtering\n" + 
+				"	for i=1:(n*2)\n" + 
+				"		marg(i)=marginal_nodes(engine, i , t);\n" + 
+				"	end\n" + 
+				"else\n" + 
+				"	if t==1\n" + 
+				"		for i=1:n\n" + 
+				"			marg(i)=marginal_nodes(engine, i, t);\n" + 
+				"		end\n" + 
+				"	else\n" + 
+				"		for i=1:(n*2)\n" + 
+				"			marg(i)=marginal_nodes(engine, i, t);\n" + 
+				"		end\n" + 
+				"	end\n" + 
+				"end\n" + 
+				"\n" + 
+				"% Printing results\n" + 
+				"% IMPORTANT: To be consistent with DrawNet we start counting/printing time slices from 0\n" + 
+				"\n" + 
+				"\n" + 
+				"% Anterior nodes are printed from t=1 to T-1\n" + 
+				"fprintf('\\n\\n**** Time %i *****\\n****\\n\\n',t-1);\n" + 
+				"%fprintf('*** Anterior nodes \\n');\n" + 
+				"for i=1:n\n" + 
+				"	if isempty(evidence{i,t})\n" + 
+				"		for k=1:ns(i)\n" + 
+				"			fprintf('Posterior of node %i:%s value %i : %d\\n',i, names{i}, k, marg(i).T(k));\n" + 
+				"		end\n" + 
+				"			fprintf('**\\n');\n" + 
+				"		else\n" + 
+				"			fprintf('Node %i:%s observed at value: %i\\n**\\n',i,names{i}, evidence{i,t});\n" + 
+				"		end\n" + 
+				"	end\n" + 
+				"end\n" + 
+				"\n" + 
+				"% Ulterior nodes are printed at last time slice\n" + 
+				"fprintf('\\n\\n**** Time %i *****\\n****\\n\\n',T-1);\n" + 
+				"%fprintf('*** Ulterior nodes \\n');\n" + 
+				"for i=(n+1):(n*2)\n" + 
+				"	if isempty(evidence{i-n,T})\n" + 
+				"		for k=1:ns(i-n)\n" + 
+				"			fprintf('Posterior of node %i:%s value %i : %d\\n',i, names{i-n}, k, marg(i).T(k));\n" + 
+				"		end\n" + 
+				"		fprintf('**\\n');\n" + 
+				"	else\n" + 
+				"		fprintf('Node %i:%s observed at value: %i\\n**\\n',i,names{i-n}, evidence{i-n,T});\n" + 
+				"	end\n" + 
+				"end");
+	}
+	
+	private static void printInference(Network net, StringBuilder code) {
+		
+		String ec;
+		char ff;
+		char fi;
+		int tStep;
+		int tSpan = net.getSliceCount();
+		String[] infEngines = {"JT"}; 
+		Scanner scanner = new Scanner(System.in);
+		
+		do {
+		System.out.println("Inserisci il motore inferenziale: ('JT',ecc..)");
+		ec = scanner.nextLine();
+		}while(!Arrays.asList(infEngines).contains(ec.toUpperCase()));
+		
+		do {
+		System.out.println("Inserisci incremento dei time step: ('1','2',ecc...)");
+		tStep = scanner.nextInt();
+		}while(tStep<0 || tStep > tSpan);
+		
+		do {
+		System.out.println("Fully factorized ? (Y/N)");
+		ff = Character.toUpperCase(scanner.nextLine().charAt(0));
+		}while(ff!='Y' || ff!= 'N');
+		
+		do {
+		System.out.println("Filtering o Smoothing ? (F/S)");
+		fi = Character.toUpperCase(scanner.nextLine().charAt(0));
+		}while(fi!='F' || fi!='S');
+		
+		scanner.close();
+		printInference(code, ec, (ff=='Y')?true:false, tSpan, tStep, (fi=='F')?true:false);
+		
+	}
+	
+	
 	//SOLO STATI BINARI
 	//l'output corrispondente allo stato falso deve essere messo per primo
 	private static boolean checkAND(Network net, int h,StringBuilder code) {
@@ -468,19 +752,7 @@ public class Main {
 					
 			}
 			
-			private static void saveFile(String code) {
-					
-					String fileName = "MatlabScript.m";
-				    BufferedWriter writer;
-					try {
-						writer = new BufferedWriter(new FileWriter(fileName));
-						writer.write(code);
-					    writer.close();
-					}
-					catch (IOException e) {
-						e.printStackTrace();
-					}  
-			}
+		
 			
 			private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
 				//%parent order:{SpoofComMes, NewICS}
@@ -515,229 +787,17 @@ public class Main {
 			}
 			
 
-			
-			private static boolean checkNoisyOr(Network net, int nodeHandle) {
-				if(net.getNodeType(nodeHandle) != Network.NodeType.NOISY_MAX)
-					return false;
-				int parents[] = net.getParents(nodeHandle);
-				for(int p : parents)
-					if(net.getOutcomeCount(p)>2)
-						return false;
-				if(net.getOutcomeCount(nodeHandle)>2)
-					return false;
-				
-				return true;
-			}
-			
-			private static void printNoisyOr(Network net, int nodeHandle,StringBuilder code) {
-				
-				code.append("leak=");
-				double[] defs = net.getNodeDefinition(nodeHandle);
-				code.append(defs[defs.length-2]+";\n");
-				code.append("parents_dn={");
-				for(int p : net.getParents(nodeHandle))
-					code.append("'"+net.getNodeName(p)+"'"+", ");
-				code.deleteCharAt(code.length()-1);
-				code.deleteCharAt(code.length()-1);
-				code.append("};\n");
-				code.append("inh_prob=[");
-				for(int d =1; d<defs.length-2;d+=4)
-					code.append((1-defs[d])+", ");
-				code.deleteCharAt(code.length()-1);
-				code.deleteCharAt(code.length()-1);
-				code.append("];\n");
-				code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(nodeHandle)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
-				code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(nodeHandle)+"'),leak, inh_prob1);\n");
-				code.append("clear inh_prob inh_prob1 leak;\n\n");
-			}
-			
-			private static void printNoisyMax(Network net, int nodeHandle,StringBuilder code) {
-				
-				double[] cpt = net.getNoisyExpandedDefinition(nodeHandle);
-				int[] parents = net.getParents(nodeHandle); 
-				int[] pIndex = new int[parents.length];
-				int[] coords = new int[parents.length];
-				
-				int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
-				for(int i=0; i<totCptColumn;i++) {
-					code.append("cpt(");
-					if(parents.length==0)
-						code.append(":,");
-					int prod = 1;
-					for(int j=parents.length-1;j>=0;j--) {
-						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j])));
-						prod*=net.getOutcomeCount(parents[j]);
-						
-					}
-					for(int k =0; k<parents.length;k++)
-						code.append(coords[k]+1 +",");
-					
-					code.append(":)=[");
-					for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
-						code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
-					code.deleteCharAt(code.length()-1);
-					code.deleteCharAt(code.length()-1);
-					code.append("];\n");
-				}
-				
-			}
-			
-			private static void printTempNoisyOr(Network net, int nodeHandle,StringBuilder code) {
-				//TODO
-			}
-			
-			private static void printTempNoisyMax(Network net, int nodeHandle,StringBuilder code) {
-				
-				//TODO
-				double[] temp = net.getNodeTemporalDefinition(nodeHandle, 1); 
-				double[] exp = net.getNoisyExpandedDefinition(nodeHandle);
-				for(double t : temp)
-					System.err.println(t);
-				System.err.println();
-				for(double e : exp)
-					System.err.println(e);
-				
-				/*
-				double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
-				TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
-				int[] pIndex = new int[parents.length];
-				int[] coords = new int[parents.length];
-				
-				int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
-				for(int i=0; i<totCptColumn;i++) {
-					code.append("cpt(");
-					if(parents.length==0)
-						code.append(":,");
-					int prod = 1;
-					for(int j=parents.length-1;j>=0;j--) {
-						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j].handle)));
-						prod*=net.getOutcomeCount(parents[j].handle);
-						
-					}
-					for(int k =0; k<parents.length;k++)
-						code.append(coords[k]+1 +",");
-					
-					code.append(":)=[");
-					for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
-						code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
-					code.deleteCharAt(code.length()-1);
-					code.deleteCharAt(code.length()-1);
-					code.append("];\n");
-				}		
-				*/
-			}
+
 			
 			private static void truncList (StringBuilder code, int delChar) {
 				code.setLength(code.length()-delChar);
 			}
 			
-			private static void printInference(StringBuilder code) {
-				code.append("% choose the inference engine\n" + 
-						"ec='JT';\n" + 
-						"\n" + 
-						"% ff=0 --> no fully factorized  OR ff=1 --> fully factorized\n" + 
-						"ff=1;\n" + 
-						"\n" + 
-						"% list of clusters\n" + 
-						"if (ec=='JT')\n" + 
-						"	engine=bk_inf_engine(bnet, 'clusters', 'exact'); %exact inference\n" + 
-						"else\n" + 
-						"	if (ff==1)\n" + 
-						"		engine=bk_inf_engine(bnet, 'clusters', 'ff'); % fully factorized\n" + 
-						"	else\n" + 
-						"		clusters={[]};\n" + 
-						"		engine=bk_inf_engine(bnet, 'clusters', clusters);\n" + 
-						"	end\n" + 
-						"end\n" + 
-						"\n" + 
-						"% IMPORTANT: DrawNet start slices from 0,\n" + 
-						"T=11; %max time span (from XML file campo Time Slice) thus from 0 to T-1\n" + 
-						"tStep=1; %from  XML file campo Time Step\n" + 
-						"evidence=cell(n,T); % create the evidence cell array\n" + 
-						"\n" + 
-						"% Evidence\n" + 
-						"% first cells of evidence are for time 0\n" + 
-						"t=5;\n" + 
-						"evidence{bnet.names('Periodic'),t+1}=1; \n" + 
-						"t=6;\n" + 
-						"evidence{bnet.names('Periodic'),t+1}=2;\n" + 
-						"evidence{bnet.names('SuspArgICS'),t+1}=2;\n" + 
-						"t=7;\n" + 
-						"evidence{bnet.names('CoherentDev'),t+1}=2;\n" + 
-						"% Campo Algoritmo di Inferenza  (filtering / smoothing)\n" + 
-						"filtering=1;\n" + 
-						"% filtering=0 --> smoothing (is the default - enter_evidence(engine,evidence))\n" + 
-						"% filtering=1 --> filtering\n" + 
-						"if ~filtering\n" + 
-						"	fprintf('\\n*****  SMOOTHING *****\\n\\n');\n" + 
-						"else\n" + 
-						"	fprintf('\\n*****  FILTERING *****\\n\\n');\n" + 
-						"end\n" + 
-						"\n" + 
-						"[engine, loglik] = enter_evidence(engine, evidence, 'filter', filtering);\n" + 
-						"\n" + 
-						"% analysis time is t for anterior nodes and t+1 for ulterior nodes\n" + 
-						"for t=1:tStep:T-1\n" + 
-						"%t = analysis time\n" + 
-						"\n" + 
-						"% create the vector of marginals\n" + 
-						"% marg(i).T is the posterior distribution of node T\n" + 
-						"% with marg(i).T(false) and marg(i).T(true)\n" + 
-						"\n" + 
-						"% NB. if filtering then ulterior nodes cannot be marginalized at time t=1\n" + 
-						"\n" + 
-						"if ~filtering\n" + 
-						"	for i=1:(n*2)\n" + 
-						"		marg(i)=marginal_nodes(engine, i , t);\n" + 
-						"	end\n" + 
-						"else\n" + 
-						"	if t==1\n" + 
-						"		for i=1:n\n" + 
-						"			marg(i)=marginal_nodes(engine, i, t);\n" + 
-						"		end\n" + 
-						"	else\n" + 
-						"		for i=1:(n*2)\n" + 
-						"			marg(i)=marginal_nodes(engine, i, t);\n" + 
-						"		end\n" + 
-						"	end\n" + 
-						"end\n" + 
-						"\n" + 
-						"% Printing results\n" + 
-						"% IMPORTANT: To be consistent with DrawNet we start counting/printing time slices from 0\n" + 
-						"\n" + 
-						"\n" + 
-						"% Anterior nodes are printed from t=1 to T-1\n" + 
-						"fprintf('\\n\\n**** Time %i *****\\n****\\n\\n',t-1);\n" + 
-						"%fprintf('*** Anterior nodes \\n');\n" + 
-						"for i=1:n\n" + 
-						"	if isempty(evidence{i,t})\n" + 
-						"		for k=1:ns(i)\n" + 
-						"			fprintf('Posterior of node %i:%s value %i : %d\\n',i, names{i}, k, marg(i).T(k));\n" + 
-						"		end\n" + 
-						"			fprintf('**\\n');\n" + 
-						"		else\n" + 
-						"			fprintf('Node %i:%s observed at value: %i\\n**\\n',i,names{i}, evidence{i,t});\n" + 
-						"		end\n" + 
-						"	end\n" + 
-						"end\n" + 
-						"\n" + 
-						"% Ulterior nodes are printed at last time slice\n" + 
-						"fprintf('\\n\\n**** Time %i *****\\n****\\n\\n',T-1);\n" + 
-						"%fprintf('*** Ulterior nodes \\n');\n" + 
-						"for i=(n+1):(n*2)\n" + 
-						"	if isempty(evidence{i-n,T})\n" + 
-						"		for k=1:ns(i-n)\n" + 
-						"			fprintf('Posterior of node %i:%s value %i : %d\\n',i, names{i-n}, k, marg(i).T(k));\n" + 
-						"		end\n" + 
-						"		fprintf('**\\n');\n" + 
-						"	else\n" + 
-						"		fprintf('Node %i:%s observed at value: %i\\n**\\n',i,names{i-n}, evidence{i-n,T});\n" + 
-						"	end\n" + 
-						"end");
-			}
+
 			
 			
 			private static class NotHMMException extends Exception{
+				private static final long serialVersionUID = 1L;
 				public NotHMMException(String message) {
 					super(message);
 				}
