@@ -375,14 +375,12 @@ public class Main {
 		code.append("parents_dn={");
 		for(int p : net.getParents(nodeHandle))
 			code.append("'"+net.getNodeName(p)+"'"+", ");
-		code.deleteCharAt(code.length()-1);
-		code.deleteCharAt(code.length()-1);
+		truncList(code, 2);
 		code.append("};\n");
 		code.append("inh_prob=[");
 		for(int d =1; d<defs.length-2;d+=4)
 			code.append((1-defs[d])+", ");
-		code.deleteCharAt(code.length()-1);
-		code.deleteCharAt(code.length()-1);
+		truncList(code, 2);
 		code.append("];\n");
 		code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(nodeHandle)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
 		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(nodeHandle)+"'),leak, inh_prob1);\n");
@@ -415,8 +413,7 @@ public class Main {
 			code.append(":)=[");
 			for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
 				code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
-			code.deleteCharAt(code.length()-1);
-			code.deleteCharAt(code.length()-1);
+			truncList(code, 2);
 			code.append("];\n");
 		}
 		
@@ -705,8 +702,7 @@ public class Main {
 				code.append(":)=[");
 				for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
 					code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
-				code.deleteCharAt(code.length()-1);
-				code.deleteCharAt(code.length()-1);
+				truncList(code, 2);
 				code.append("];\n");
 			}
 			
@@ -734,8 +730,7 @@ public class Main {
 					code.append(":)=[");
 					for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
 						code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
-					code.deleteCharAt(code.length()-1);
-					code.deleteCharAt(code.length()-1);
+					truncList(code, 2);
 					code.append("];\n");
 				}		
 			
@@ -779,8 +774,7 @@ public class Main {
 				}
 				
 				if(noParents==false) {
-					code.deleteCharAt(code.length()-1);
-					code.deleteCharAt(code.length()-1);
+					truncList(code, 2);
 				}
 				
 				code.append("}\n");
