@@ -511,8 +511,6 @@ public class Main {
 		}
 	}
 	
-	
-	
 	private static void printInference(Network net, StringBuilder code,String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
 		
 		code.append("% choose the inference engine\n" + 
