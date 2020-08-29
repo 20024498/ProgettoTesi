@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
 import smile.*;
@@ -140,14 +139,9 @@ public class Main {
 				
 				//ARCHI TEMPORALI ENTRANTI
 				else {
-					// TODO Per ora niente archi temporali, solo test, occorre creare funzione su matlab ?
-					
-					//NODO DI TIPO NOISY-OR
-					if(checkTempNoisyOr(net, h, code)) 
-						printTempNoisyOr(net, h, code);
+					// TODO Per ora niente archi temporali
 					
 					//NODO DI TIPO NOISY MAX
-					else 
 						printTempNoisyMax(net, h, code);
 				}
 			}	
@@ -324,16 +318,67 @@ public class Main {
 	private static void printTempTabularCpd(Network net, int nodeHandle,StringBuilder code) {
 		
 		code.append("%node "+net.getNodeName(nodeHandle)+" slice 2 \n");
-		printParentOrder(net, nodeHandle, code);
+		printTempParentOrder(net, nodeHandle, code);
 		myTempCpdPrint(net, nodeHandle,code);
-		boolean moreTemporalParents = net.getTemporalParents(nodeHandle, 1).length>1;
-		if(moreTemporalParents)
+		int nParents = net.getTemporalParents(nodeHandle, 1).length + net.getParents(nodeHandle).length;
+		boolean moreParents = nParents>1;
+		if(moreParents)
 			cpt1Print(net, nodeHandle, code);
-		code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(nodeHandle)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(nodeHandle)+"'),'CPT',"+(moreTemporalParents?"cpt1":"cpt")+");\n");
+		code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(nodeHandle)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(nodeHandle)+"'),'CPT',"+(moreParents?"cpt1":"cpt")+");\n");
 		code.append("clear cpt; ");
-		if(moreTemporalParents) 
+		if(moreParents) 
 			code.append("clear cpt1;");
 		code.append("\n\n");
+	}
+	
+	
+	//l'output corrispondente allo stato falso deve essere messo per primo
+	private static boolean checkAND(Network net, int h,StringBuilder code) {
+		if(net.getOutcomeCount(h)>2)
+			return false;
+		double[] defs = net.getNodeDefinition(h);
+		int len = defs.length;
+		if(defs[len-2]==1.0 && defs[len-1]==0.0) {
+			for(int i=0; i<len-2;i++) {
+				if(i%2==0) {
+					if(defs[i]!=0.0)
+						return false;
+				}
+				else
+					if(defs[i]!=1.0)
+						return false;
+			}
+		}
+		else 
+			return false;
+		
+		return true;
+	}
+	
+	
+	
+	//l'output corrispondente allo stato falso deve essere messo per primo
+	private static boolean checkOR(Network net, int h,StringBuilder code) {
+		if(net.getOutcomeCount(h)>2)
+			return false;
+		double[] defs = net.getNodeDefinition(h);
+		if(defs[0]==0.0 && defs[1]==1.0) {
+			for(int i=2; i<defs.length;i++) {
+				if(i%2==0) {
+					if(defs[i]!=1.0)
+						return false;
+				}
+				else
+					if(defs[i]!=0.0)
+						return false;
+			}
+		}
+		else 
+			return false;
+		
+		return true;
+		
+		
 	}
 	
 	private static void printBooleanCpdAND (Network net, int nodeHandle,StringBuilder code) {
@@ -372,7 +417,7 @@ public class Main {
 		printParentOrder(net, nodeHandle, code);
 		code.append("leak=");
 		double[] defs = net.getNodeDefinition(nodeHandle);
-		code.append(defs[defs.length-2]+";\n");
+		code.append(defs[defs.length-1]+";\n");
 		code.append("parents_dn={");
 		for(int p : net.getParents(nodeHandle))
 			code.append("'"+net.getNodeName(p)+"'"+", ");
@@ -380,12 +425,13 @@ public class Main {
 		code.append("};\n");
 		code.append("inh_prob=[");
 		for(int d =1; d<defs.length-2;d+=4)
-			code.append((1-defs[d])+", ");
+			code.append((defs[d])+", ");
 		truncList(code, 2);
 		code.append("];\n");
 		code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(nodeHandle)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
 		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(nodeHandle)+"'),leak, inh_prob1);\n");
 		code.append("clear inh_prob inh_prob1 leak;\n\n");
+		
 	}
 	
 	private static void printNoisyMax(Network net, int nodeHandle,StringBuilder code) {
@@ -423,14 +469,7 @@ public class Main {
 		
 	}
 	
-	private static boolean checkTempNoisyOr(Network net, int nodeHandle,StringBuilder code){
-		//TODO
-		return true;
-	}			
-	private static void printTempNoisyOr(Network net, int nodeHandle,StringBuilder code) {
-		code.append("%node "+net.getNodeName(nodeHandle)+" slice 2 \n");
-		//TODO
-	}
+	
 	
 	private static void printTempNoisyMax(Network net, int nodeHandle,StringBuilder code) {
 		
@@ -629,11 +668,11 @@ public class Main {
 		char fi;
 		int tStep;
 		int tSpan = net.getSliceCount();
-		String[] infEngines = {"JT"}; 
+		String[] infEngines = {"JT","BK"}; 
 		Scanner scanner = new Scanner(System.in);
 		
 		do {
-		System.out.println("Inserisci il motore inferenziale: ('JT',ecc..)");
+		System.out.println("Inserisci il motore inferenziale: ('JT','BK',..)");
 		ec = scanner.nextLine();
 		}while(!Arrays.asList(infEngines).contains(ec.toUpperCase()));
 		
@@ -658,52 +697,7 @@ public class Main {
 	}
 	
 	
-	//SOLO STATI BINARI
-	//l'output corrispondente allo stato falso deve essere messo per primo
-	private static boolean checkAND(Network net, int h,StringBuilder code) {
-		double[] defs = net.getNodeDefinition(h);
-		int len = defs.length;
-		if(defs[len-2]==0.0 && defs[len-1]==1.0) {
-			for(int i=0; i<len-2;i++) {
-				if(i%2==0) {
-					if(defs[i]!=1.0)
-						return false;
-				}
-				else
-					if(defs[i]!=0.0)
-						return false;
-			}
-		}
-		else 
-			return false;
-		
-		return true;
-	}
-	
-	
-	//SOLO STATI BINARI
-	//l'output corrispondente allo stato falso deve essere messo per primo
-	private static boolean checkOR(Network net, int h,StringBuilder code) {
-		//code.append("\n-------------------------------->QUI:");
-		double[] defs = net.getNodeDefinition(h);
-		if(defs[0]==1.0 && defs[1]==0.0) {
-			for(int i=2; i<defs.length;i++) {
-				if(i%2==0) {
-					if(defs[i]!=0.0)
-						return false;
-				}
-				else
-					if(defs[i]!=1.0)
-						return false;
-			}
-		}
-		else 
-			return false;
-		
-		return true;
-		
-		
-	}
+
 
 
 	
@@ -737,7 +731,18 @@ public class Main {
 		}
 			private static void myTempCpdPrint(Network net, int nodeHandle,StringBuilder code) {
 				double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
-				TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
+				TemporalInfo[] tParents = net.getTemporalParents(nodeHandle, 1); 
+				
+				
+				int[] nParents = net.getParents(nodeHandle);
+				int[] parents = new int[nParents.length+tParents.length];
+				int p = 0;
+				for(int z=0;z<nParents.length;z++,p++)
+					parents[p]=nParents[z];
+				for(int z=0;z<tParents.length;z++,p++)
+					parents[p]=tParents[z].handle;
+				
+			
 				int[] pIndex = new int[parents.length];
 				int[] coords = new int[parents.length];
 				
@@ -748,8 +753,8 @@ public class Main {
 						code.append(":,");
 					int prod = 1;
 					for(int j=parents.length-1;j>=0;j--) {
-						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j].handle)));
-						prod*=net.getOutcomeCount(parents[j].handle);
+						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j])));//parents[j].handle
+						prod*=net.getOutcomeCount(parents[j]);//parents[j].handle
 						
 					}
 					for(int k =0; k<parents.length;k++)
@@ -765,11 +770,14 @@ public class Main {
 		}
 			
 			private static void cpt1Print(Network net, int nodeHandle,StringBuilder code){
-				TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
-				code.append("cpt1=mk_named_CPT_inter({'"+net.getNodeId(nodeHandle)+"', ");
-				for(TemporalInfo t : parents)
-					if(t.handle != nodeHandle)
-						code.append("'"+net.getNodeId(t.handle)+"', ");
+				TemporalInfo[] tParents = net.getTemporalParents(nodeHandle, 1); 
+				int[] parents = net.getParents(nodeHandle);
+				code.append("cpt1=mk_named_CPT_inter({");
+				for(TemporalInfo t : tParents)
+					code.append("'"+net.getNodeId(t.handle)+"', ");
+				for(int p: parents)
+					code.append("'"+net.getNodeId(p)+"', ");
+					
 				code.append("'"+net.getNodeId(nodeHandle)+"'");
 				code.append("},names, bnet.dag, cpt,[]);\n");
 					
@@ -777,7 +785,7 @@ public class Main {
 			
 		
 			
-			private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
+			/*private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
 				//%parent order:{SpoofComMes, NewICS}
 				code.append("%parent order:{");
 				boolean temp = false;
@@ -785,7 +793,7 @@ public class Main {
 				
 				for (int p : net.getAllNodes()) {
 					if(net.temporalArcExists(p, nodeHandle, 1)) {
-						code.append(net.getNodeName(p));
+						code.append(net.getNodeId(p));
 						code.append(", ");
 						temp = true;
 						noParents = false;
@@ -795,7 +803,7 @@ public class Main {
 					
 					int[] parents = net.getParents(nodeHandle);
 					for(int p: parents) {
-						code.append(net.getNodeName(p));
+						code.append(net.getNodeId(p));
 						code.append(", ");
 						noParents = false;
 					}
@@ -806,9 +814,52 @@ public class Main {
 				}
 				
 				code.append("}\n");
+			}*/
+			
+			private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
+				//%parent order:{SpoofComMes, NewICS}
+				code.append("%parent order:{");
+				
+					int[] parents = net.getParents(nodeHandle);
+					for(int p: parents) {
+						code.append(net.getNodeId(p));
+						code.append(", ");
+					}
+				
+				if(parents.length!=0) {
+					truncList(code, 2);
+				}
+				
+				code.append("}\n");
 			}
 			
-
+			private static void printTempParentOrder(Network net, int nodeHandle,StringBuilder code) {
+				//%parent order:{SpoofComMes, NewICS}
+				code.append("%parent order:{");
+				boolean noParents = true;
+				
+				for (int p : net.getAllNodes()) {
+					if(net.temporalArcExists(p, nodeHandle, 1)) {
+						code.append(net.getNodeId(p));
+						code.append(", ");
+						noParents = false;
+					}	
+				}	
+					
+				int[] parents = net.getParents(nodeHandle);
+				for(int p: parents) {
+					code.append(net.getNodeId(p));
+					code.append(", ");
+					noParents = false;
+				}
+				
+				
+				if(noParents==false) {
+					truncList(code, 2);
+				}
+				
+				code.append("}\n");
+			}
 
 			
 			private static void truncList (StringBuilder code, int delChar) {
