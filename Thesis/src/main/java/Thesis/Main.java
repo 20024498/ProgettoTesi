@@ -167,7 +167,7 @@ public class Main {
 		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
 			if(net.getNodeBgColor(h).equals(new Color(229,246,247))) {
 				hStates.add(h);
-				str.append("'"+net.getNodeName(h)+"'");
+				str.append("'"+net.getNodeId(h)+"'");
 				str.append(", ");
 			}
 		}
@@ -190,7 +190,7 @@ public class Main {
 			
 			if(!net.getNodeBgColor(h).equals(new Color(229,246,247))) {
 				obs.add(h);
-				str.append("'"+net.getNodeName(h)+"'");
+				str.append("'"+net.getNodeId(h)+"'");
 				str.append(", ");
 			}
 		}
@@ -232,9 +232,9 @@ public class Main {
 			int[] children;
 			if((children = net.getChildren(h)).length>0) 
 				for(Integer i : children) {
-					str.append("'"+net.getNodeName(h)+"'");
+					str.append("'"+net.getNodeId(h)+"'");
 					str.append(", ");
-					str.append("'"+net.getNodeName(i)+"'");
+					str.append("'"+net.getNodeId(i)+"'");
 					str.append(";\n");
 				}	
 		}
@@ -254,9 +254,9 @@ public class Main {
 		for (int p : net.getAllNodes()) {
 			for (int c : net.getAllNodes()) {
 				if(net.temporalArcExists(p, c, 1)) {
-					str.append("'"+net.getNodeName(p)+"'");
+					str.append("'"+net.getNodeId(p)+"'");
 					str.append(", ");
-					str.append("'"+net.getNodeName(c)+"'");
+					str.append("'"+net.getNodeId(c)+"'");
 					str.append(";\n");
 					temp = true;
 				}	
@@ -309,23 +309,23 @@ public class Main {
 	
 	private static void printTabularCpd(Network net, int nodeHandle,StringBuilder code) {
 		
-		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
 		printParentOrder(net, nodeHandle, code);
 		myCpdPrint(net, nodeHandle,code);
-		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(nodeHandle)+"'),'CPT',cpt);\n");
+		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'CPT',cpt);\n");
 		code.append("clear cpt;\n\n");	
 	}
 	
 	private static void printTempTabularCpd(Network net, int nodeHandle,StringBuilder code) {
 		
-		code.append("%node "+net.getNodeName(nodeHandle)+" slice 2 \n");
+		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 2 \n");
 		printTempParentOrder(net, nodeHandle, code);
 		myTempCpdPrint(net, nodeHandle,code);
 		int nParents = net.getTemporalParents(nodeHandle, 1).length + net.getParents(nodeHandle).length;
 		boolean moreParents = nParents>1;
 		if(moreParents)
 			cpt1Print(net, nodeHandle, code);
-		code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeName(nodeHandle)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeName(nodeHandle)+"'),'CPT',"+(moreParents?"cpt1":"cpt")+");\n");
+		code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeId(nodeHandle)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeId(nodeHandle)+"'),'CPT',"+(moreParents?"cpt1":"cpt")+");\n");
 		code.append("clear cpt; ");
 		if(moreParents) 
 			code.append("clear cpt1;");
@@ -383,17 +383,17 @@ public class Main {
 	}
 	
 	private static void printBooleanCpdAND (Network net, int nodeHandle,StringBuilder code) {
-		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
 		printParentOrder(net, nodeHandle, code);
-		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(nodeHandle)+"'),'named',");
+		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'named',");
 		code.append("'all');\n");
 		code.append("clear cpt;\n\n");
 	}
 	
 	private static void printBooleanCpdOR (Network net, int nodeHandle,StringBuilder code) {
-		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
 		printParentOrder(net, nodeHandle, code);
-		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeName(nodeHandle)+"'),'named',");
+		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'named',");
 		code.append("'any');\n");
 		code.append("clear cpt;\n\n");
 	}
@@ -414,14 +414,14 @@ public class Main {
 	
 	private static void printNoisyOr(Network net, int nodeHandle,StringBuilder code) {
 		
-		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
 		printParentOrder(net, nodeHandle, code);
 		code.append("leak=");
 		double[] defs = net.getNodeDefinition(nodeHandle);
 		code.append(defs[defs.length-1]+";\n");
 		code.append("parents_dn={");
 		for(int p : net.getParents(nodeHandle))
-			code.append("'"+net.getNodeName(p)+"'"+", ");
+			code.append("'"+net.getNodeId(p)+"'"+", ");
 		truncList(code, 2);
 		code.append("};\n");
 		code.append("inh_prob=[");
@@ -429,15 +429,15 @@ public class Main {
 			code.append((defs[d])+", ");
 		truncList(code, 2);
 		code.append("];\n");
-		code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeName(nodeHandle)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
-		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeName(nodeHandle)+"'),leak, inh_prob1);\n");
+		code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeId(nodeHandle)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
+		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeId(nodeHandle)+"'),leak, inh_prob1);\n");
 		code.append("clear inh_prob inh_prob1 leak;\n\n");
 		
 	}
 	
 	private static void printNoisyMax(Network net, int nodeHandle,StringBuilder code) {
 		
-		code.append("%node "+net.getNodeName(nodeHandle)+" slice 1 \n");
+		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
 		printParentOrder(net, nodeHandle, code);
 		double[] cpt = net.getNoisyExpandedDefinition(nodeHandle);
 		int[] parents = net.getParents(nodeHandle); 
@@ -465,7 +465,7 @@ public class Main {
 			code.append("];\n");
 		}
 		
-		code.append("bnet.CPD{bnet.names('"+net.getNodeName(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeName(nodeHandle)+"'),'CPT',cpt);\n");
+		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'CPT',cpt);\n");
 		code.append("clear cpt;\n\n");
 		
 	}
@@ -474,7 +474,7 @@ public class Main {
 	
 	private static void printTempNoisyMax(Network net, int nodeHandle,StringBuilder code) {
 		
-		code.append("%node "+net.getNodeName(nodeHandle)+" slice 2 \n");
+		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 2 \n");
 		
 		//TODO
 		double[] temp = net.getNodeTemporalDefinition(nodeHandle, 1); 
