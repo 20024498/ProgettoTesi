@@ -22,7 +22,8 @@ public class Main {
 		
 		//INIZIALIZZAZIONE RETE
 		Network net = new Network();
-		net.readFile("net/rete.xdsl");
+		String fileName = "rete10.xdsl";
+		net.readFile("net/"+fileName);
 		
 		//INIZIALIZZAZIONE CODICE
 		StringBuilder code = new StringBuilder();
@@ -151,7 +152,7 @@ public class Main {
 		printInference(net,code,"JT",true,11,1,true);
 		
 		//FILE DI OUTPUT
-		saveFile(code.toString());
+		saveFile(code.toString(),fileName);
 		System.out.println(code.toString());	
 			
 	}
@@ -514,12 +515,14 @@ public class Main {
 		*/
 	}
 	
-	private static void saveFile(String code) {
-		
-		String fileName = "MatlabScript.m";
+	private static void saveFile(String code,String fileName) {
+		StringBuilder scriptName = new StringBuilder("MatlabScript_");
+		scriptName.append(fileName);
+		scriptName.setLength(scriptName.length()-4);
+		scriptName.append("m");
 	    BufferedWriter writer;
 		try {
-			writer = new BufferedWriter(new FileWriter(fileName));
+			writer = new BufferedWriter(new FileWriter(scriptName.toString()));
 			writer.write(code);
 		    writer.close();
 		}
@@ -580,13 +583,13 @@ public class Main {
 				
 		printEvidence(net, code);
 			
-		code.append("t=5;\n" + 
+		/*code.append("t=5;\n" + 
 				"evidence{bnet.names('Periodic'),t+1}=1; \n" + 
 				"t=6;\n" + 
 				"evidence{bnet.names('Periodic'),t+1}=2;\n" + 
 				"evidence{bnet.names('SuspArgICS'),t+1}=2;\n" + 
 				"t=7;\n" + 
-				"evidence{bnet.names('CoherentDev'),t+1}=2;\n");  
+				"evidence{bnet.names('CoherentDev'),t+1}=2;\n"); */
 				
 				
 		code.append("% Campo Algoritmo di Inferenza  (filtering / smoothing)\n" + 
