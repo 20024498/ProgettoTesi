@@ -299,7 +299,7 @@ public class Main {
 					tempNodes.add(i);
 				}
 						
-		for(Integer i : obs) //necessario?
+		for(Integer i : obs) 
 			for(int parent :net.getAllNodes())
 				if(net.temporalArcExists(parent, i, 1) && !tempNodes.contains(i)){
 					cpdNodes.add(i);
@@ -773,16 +773,40 @@ public class Main {
 		}
 			
 			private static void cpt1Print(Network net, int nodeHandle,StringBuilder code){
-				TemporalInfo[] tParents = net.getTemporalParents(nodeHandle, 1); 
 				int[] parents = net.getParents(nodeHandle);
+				TemporalInfo[] tParents = net.getTemporalParents(nodeHandle, 1); 
+				ArrayList<Integer> parentsList = new ArrayList<Integer>();
+				ArrayList<Integer> tparentsList = new ArrayList<Integer>();
+				ArrayList<Integer> family = new ArrayList<Integer>();
+				
 				code.append("cpt1=mk_named_CPT_inter({");
-				for(TemporalInfo t : tParents)
-					code.append("'"+net.getNodeId(t.handle)+"', ");
-				for(int p: parents)
+				
+				for(int p : parents) {
 					code.append("'"+net.getNodeId(p)+"', ");
-					
+					parentsList.add(p);
+					family.add(p);
+				}
+			
+				for(TemporalInfo t : tParents) {
+						code.append("'"+net.getNodeId(t.handle)+"', ");
+						tparentsList.add(t.handle);
+						family.add(t.handle);	
+				}
+			
 				code.append("'"+net.getNodeId(nodeHandle)+"'");
-				code.append("},names, bnet.dag, cpt,[]);\n");
+				family.add(nodeHandle);
+					
+				StringBuilder idx = new StringBuilder();
+				code.append("},names, bnet.dag, cpt,[");
+				for(Integer t : tparentsList)
+					if(parentsList.contains(t))
+						idx.append(family.lastIndexOf(t)+1+",");
+				
+				if(idx.length()>0)
+					truncList(idx, 1);
+				
+				code.append(idx.toString());
+				code.append("]);\n");
 					
 			}
 			
@@ -841,14 +865,6 @@ public class Main {
 				code.append("%parent order:{");
 				boolean noParents = true;
 				
-				for (int p : net.getAllNodes()) {
-					if(net.temporalArcExists(p, nodeHandle, 1)) {
-						code.append(net.getNodeId(p));
-						code.append(", ");
-						noParents = false;
-					}	
-				}	
-					
 				int[] parents = net.getParents(nodeHandle);
 				for(int p: parents) {
 					code.append(net.getNodeId(p));
@@ -856,6 +872,13 @@ public class Main {
 					noParents = false;
 				}
 				
+				for (int p : net.getAllNodes()) {
+					if(net.temporalArcExists(p, nodeHandle, 1)) {
+						code.append(net.getNodeId(p));
+						code.append(", ");
+						noParents = false;
+					}	
+				}	
 				
 				if(noParents==false) {
 					truncList(code, 2);
