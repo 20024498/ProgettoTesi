@@ -1,12 +1,19 @@
 package Thesis;
 
 import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+
+import org.apache.commons.text.StringEscapeUtils;
 
 import smile.*;
 
@@ -16,13 +23,17 @@ public class Main {
 		
 		
 		//LICENZA
-		licenseInit();
-		
-		/*TODO LICENZA TRAMITE FILE*/
+		try {
+			licenseInit();
+		} catch (FileNotFoundException e1) {
+			System.err.println("Impossibile recuperare il file di licenza\n");
+		} catch (IOException e2) {
+			System.err.println("Impossibile completare l'operazione di lettura della licenza\n");
+		}
 		
 		//INIZIALIZZAZIONE RETE
 		Network net = new Network();
-		String fileName = "rete7.xdsl";
+		String fileName = "rete10.xdsl";
 		net.readFile("net/"+fileName);
 		
 		//INIZIALIZZAZIONE CODICE
@@ -824,8 +835,6 @@ public class Main {
 			}
 			
 
-			
-			
 			private static class NotHMMException extends Exception{
 				private static final long serialVersionUID = 1L;
 				public NotHMMException(String message) {
@@ -847,26 +856,37 @@ public class Main {
 			}
 			
 			
-			private static License licenseInit() {
-				return new smile.License(
-						"SMILE LICENSE b868fc1e e51692e8 1e85e6f2 " +
-						"THIS IS AN ACADEMIC LICENSE AND CAN BE USED " +
-						"SOLELY FOR ACADEMIC RESEARCH AND TEACHING, " +
-						"AS DEFINED IN THE BAYESFUSION ACADEMIC " +
-						"SOFTWARE LICENSING AGREEMENT. " +
-						"Serial #: 2eil2unyjs5or1wst5l3g1cxj " +
-						"Issued for: ANDREA GILI (20024498@studenti.uniupo.it) " +
-						"Academic institution: Universit\u00e0 del Piemonte Orientale " +
-						"Valid until: 2020-10-18 " +
-						"Issued by BayesFusion activation server",
-						new byte[] {
-						53,-6,-125,-49,125,-71,13,-89,-24,121,87,33,-27,-6,85,110,
-						114,2,11,-16,-35,13,91,-106,-118,62,83,-3,79,20,-119,-102,
-						-50,1,-29,-90,-102,29,61,90,15,-109,-21,-5,6,81,56,90,
-						22,-104,-84,90,-10,-34,85,-107,-82,-109,120,22,-10,-120,93,75
-						}
-					);
-
+			private static License licenseInit() throws IOException {
+				InputStream is = new FileInputStream("license/License.java");
+				BufferedReader buf = new BufferedReader(new InputStreamReader(is));
+				String line = buf.readLine();
+				StringBuilder sb = new StringBuilder();
+				int skip = 0;
+				while(line != null){ 
+					if(skip++>2)
+						sb.append(line).append("\n");
+					line = buf.readLine();
+				} 
+				buf.close();
+				String fileAsString = sb.toString();
+				
+				String[] splitStr = fileAsString.split(",\\n\\tnew byte\\[\\] ");
+				splitStr[0] = splitStr[0].replaceAll("\t", "");
+				splitStr[0] = splitStr[0].replaceAll("\" \\+", "");
+				splitStr[0] = splitStr[0].replaceAll("\"", "");
+				splitStr[0] = splitStr[0].replaceAll("\n", "");
+				splitStr[0] = StringEscapeUtils.unescapeJava(splitStr[0]);
+				
+				splitStr[1] = splitStr[1].replaceAll("\\);","");
+				splitStr[1] = splitStr[1].replaceAll("\t","");
+				splitStr[1] = splitStr[1].replaceAll("\n","");
+				splitStr[1] = splitStr[1].substring(1, splitStr[1].length()-1);
+				String[] bytesStr = splitStr[1].split(",");
+				byte[] bytes = new byte[bytesStr.length];
+				for(int i=0;i<bytesStr.length;i++)
+					bytes[i] = Byte.valueOf(bytesStr[i]); 
+					
+				return new smile.License(splitStr[0],bytes);	
 			}
 
 }
