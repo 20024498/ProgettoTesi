@@ -22,7 +22,7 @@ public class Main {
 		
 		//INIZIALIZZAZIONE RETE
 		Network net = new Network();
-		String fileName = "rete10.xdsl";
+		String fileName = "rete7.xdsl";
 		net.readFile("net/"+fileName);
 		
 		//INIZIALIZZAZIONE CODICE
@@ -140,7 +140,6 @@ public class Main {
 				
 				//ARCHI TEMPORALI ENTRANTI
 				else {
-					// TODO Per ora niente archi temporali
 					
 					//NODO DI TIPO NOISY MAX
 						printTempNoisyMax(net, h, code);
@@ -473,46 +472,11 @@ public class Main {
 	
 	
 	private static void printTempNoisyMax(Network net, int nodeHandle,StringBuilder code) {
+	
+		net.setNodeType(nodeHandle, Network.NodeType.CPT);
+		printTempTabularCpd(net, nodeHandle, code);
+		net.setNodeType(nodeHandle, Network.NodeType.NOISY_MAX);
 		
-		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 2 \n");
-		
-		//TODO
-		double[] temp = net.getNodeTemporalDefinition(nodeHandle, 1); 
-		double[] exp = net.getNoisyExpandedDefinition(nodeHandle);
-		for(double t : temp)
-			System.err.println(t);
-		System.err.println();
-		for(double e : exp)
-			System.err.println(e);
-		
-		/*
-		double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
-		TemporalInfo[] parents = net.getTemporalParents(nodeHandle, 1); 
-		int[] pIndex = new int[parents.length];
-		int[] coords = new int[parents.length];
-		
-		int totCptColumn = cpt.length/net.getOutcomeCount(nodeHandle);
-		for(int i=0; i<totCptColumn;i++) {
-			code.append("cpt(");
-			if(parents.length==0)
-				code.append(":,");
-			int prod = 1;
-			for(int j=parents.length-1;j>=0;j--) {
-				coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j].handle)));
-				prod*=net.getOutcomeCount(parents[j].handle);
-				
-			}
-			for(int k =0; k<parents.length;k++)
-				code.append(coords[k]+1 +",");
-			
-			code.append(":)=[");
-			for(int w =0; w<net.getOutcomeCount(nodeHandle);w++)
-				code.append(cpt[i*net.getOutcomeCount(nodeHandle)+w]+", ");
-			code.deleteCharAt(code.length()-1);
-			code.deleteCharAt(code.length()-1);
-			code.append("];\n");
-		}		
-		*/
 	}
 	
 	private static void saveFile(String code,String fileName) {
@@ -675,23 +639,23 @@ public class Main {
 		Scanner scanner = new Scanner(System.in);
 		
 		do {
-		System.out.println("Inserisci il motore inferenziale: ('JT','BK',..)");
-		ec = scanner.nextLine();
+			System.out.println("Inserisci il motore inferenziale: ('JT','BK',..)");
+			ec = scanner.nextLine();
 		}while(!Arrays.asList(infEngines).contains(ec.toUpperCase()));
 		
 		do {
-		System.out.println("Inserisci incremento dei time step: ('1','2',ecc...)");
-		tStep = scanner.nextInt();
+			System.out.println("Inserisci incremento dei time step: ('1','2',ecc...)");
+			tStep = scanner.nextInt();
 		}while(tStep<0 || tStep > tSpan);
 		
 		do {
-		System.out.println("Fully factorized ? (Y/N)");
-		ff = Character.toUpperCase(scanner.nextLine().charAt(0));
+			System.out.println("Fully factorized ? (Y/N)");
+			ff = Character.toUpperCase(scanner.nextLine().charAt(0));
 		}while(ff!='Y' || ff!= 'N');
 		
 		do {
-		System.out.println("Filtering o Smoothing ? (F/S)");
-		fi = Character.toUpperCase(scanner.nextLine().charAt(0));
+			System.out.println("Filtering o Smoothing ? (F/S)");
+			fi = Character.toUpperCase(scanner.nextLine().charAt(0));
 		}while(fi!='F' || fi!='S');
 		
 		scanner.close();
@@ -810,39 +774,6 @@ public class Main {
 					
 			}
 			
-		
-			
-			/*private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
-				//%parent order:{SpoofComMes, NewICS}
-				code.append("%parent order:{");
-				boolean temp = false;
-				boolean noParents = true;
-				
-				for (int p : net.getAllNodes()) {
-					if(net.temporalArcExists(p, nodeHandle, 1)) {
-						code.append(net.getNodeId(p));
-						code.append(", ");
-						temp = true;
-						noParents = false;
-					}	
-				}	
-				if(temp==false) {
-					
-					int[] parents = net.getParents(nodeHandle);
-					for(int p: parents) {
-						code.append(net.getNodeId(p));
-						code.append(", ");
-						noParents = false;
-					}
-				}
-				
-				if(noParents==false) {
-					truncList(code, 2);
-				}
-				
-				code.append("}\n");
-			}*/
-			
 			private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
 				//%parent order:{SpoofComMes, NewICS}
 				code.append("%parent order:{");
@@ -915,48 +846,6 @@ public class Main {
 				}	
 			}
 			
-	
-	/*
-		private static void printCptMatrix(Network net, int nodeHandle) {
-			
-			double[] cpt = net.getNodeDefinition(nodeHandle);
-			int[] parents = net.getParents(nodeHandle);
-			int dimCount = 1 + parents.length;
-			
-			int[] dimSizes = new int[dimCount];
-			for (int i = 0; i < dimCount - 1; i ++) 
-				dimSizes[i] = net.getOutcomeCount(parents[i]);
-			
-			dimSizes[dimSizes.length - 1] = net.getOutcomeCount(nodeHandle);
-			
-			int[] coords = new int[dimCount];
-			for (int elemIdx = 0; elemIdx < cpt.length; elemIdx ++) {
-				indexToCoords(elemIdx, dimSizes, coords);
-				String outcome = net.getOutcomeId(nodeHandle, coords[dimCount - 1]);
-				System.out.printf(" P(%s(OUTCOME NODO)", outcome);
-				
-				if (dimCount > 1) {
-					System.out.print(" | ");
-					for (int parentIdx = 0; parentIdx < parents.length; parentIdx++){
-						if (parentIdx > 0) System.out.print(",");
-						int parentHandle = parents[parentIdx];
-						System.out.printf("%s(PARENT)=%s(OUTCOME PARENT)",net.getNodeId(parentHandle),net.getOutcomeId(parentHandle, coords[parentIdx]));
-					}
-				}
-				double prob = cpt[elemIdx];
-				System.out.printf(")=%f\n", prob);
-			}
-		}
-		
-		private static void indexToCoords(int index, int[] dimSizes, int[] coords) {
-			int prod = 1;
-			for (int i = dimSizes.length - 1; i >= 0; i --) {
-				coords[i] = (index / prod) % dimSizes[i];
-				prod *= dimSizes[i];
-			}
-		}
-		
-		*/
 			
 			private static License licenseInit() {
 				return new smile.License(
