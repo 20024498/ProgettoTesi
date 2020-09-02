@@ -14,7 +14,11 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.*;
+import java.io.*;
 import smile.*;
 
 public class Main {
@@ -504,6 +508,23 @@ public class Main {
 		catch (IOException e) {
 			e.printStackTrace();
 		}  
+	}
+	
+	private static void setEvidence(Network net,String fileName) throws ParserConfigurationException, SAXException, IOException {
+		
+		File inputFile = new File("net/"+fileName);
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(inputFile);
+        doc.getDocumentElement().normalize();
+        System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+        NodeList nList = doc.getElementsByTagName("cases");
+        System.out.println("----------------------------");
+        
+        for (int temp = 0; temp < nList.getLength(); temp++) {
+           Node nNode = nList.item(temp);
+           System.out.println("\nCurrent Element :" + nNode.getNodeName());}
+
 	}
 	
 	private static void printEvidence(Network net, StringBuilder code){
