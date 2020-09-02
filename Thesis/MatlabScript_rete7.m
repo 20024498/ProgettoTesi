@@ -122,6 +122,12 @@ evidence=cell(n,T); % create the evidence cell array
 
 % Evidence
 % first cells of evidence are for time 0
+t=3;
+evidence{bnet.names('Node1'),t+1}=1; 
+t=4;
+evidence{bnet.names('Node2'),t+1}=2; 
+t=6;
+evidence{bnet.names('Node3'),t+1}=1; 
 % Campo Algoritmo di Inferenza  (filtering / smoothing)
 filtering=1;
 % filtering=0 --> smoothing (is the default - enter_evidence(engine,evidence))

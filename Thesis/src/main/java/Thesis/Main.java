@@ -38,7 +38,8 @@ public class Main {
 		//INIZIALIZZAZIONE RETE
 		Network net = new Network();
 		String fileName = "rete10.xdsl";
-		net.readFile("net/"+fileName);
+		String filePath = "net/"+fileName;
+		net.readFile(filePath);
 		
 		//INIZIALIZZAZIONE CODICE
 		StringBuilder code = new StringBuilder();
@@ -163,7 +164,7 @@ public class Main {
 		}
 			
 		//INFERENZA
-		printInference(net,code,"JT",true,11,1,true);
+		printInference(net,code,filePath,"prova1","JT",true,11,1,true);
 		
 		//FILE DI OUTPUT
 		saveFile(code.toString(),fileName);
@@ -510,30 +511,54 @@ public class Main {
 		}  
 	}
 	
-	private static void setEvidence(Network net,String fileName) throws ParserConfigurationException, SAXException, IOException {
+	private static void setEvidence(Network net,String fileName, String caseName) throws ParserConfigurationException, SAXException, IOException {
 		
-		File inputFile = new File("net/"+fileName);
+		//ArrayList<TemporalEvidence> evidenceArray = new ArrayList<Main.TemporalEvidence>();
+		File inputFile = new File(fileName);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(inputFile);
         doc.getDocumentElement().normalize();
-        System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
-        NodeList nList = doc.getElementsByTagName("cases");
-        System.out.println("----------------------------");
+        NodeList caseList = doc.getElementsByTagName("case");
+       
+        for (int i = 0; i < caseList.getLength(); i++) {
+           Node caseNode = caseList.item(i);
+         
+           if (caseNode.getNodeType() == Node.ELEMENT_NODE) {
+               Element caseElement = (Element) caseNode;
+               
+               if(caseElement.getAttribute("name").equals(caseName)) {
+            	   
+            	   NodeList evidenceList = caseElement.getChildNodes();
+                   for(int j = 0; j < evidenceList.getLength(); j++) {
+                	   Node evidenceNode = evidenceList.item(j);
+                	   if (evidenceNode.getNodeType() == Node.ELEMENT_NODE) {
+                           Element evidenceElement = (Element) evidenceNode;
+                           if(evidenceNode.getNodeName().contentEquals("evidence")) 
+                        	  net.setTemporalEvidence(evidenceElement.getAttribute("node"), Integer.valueOf(evidenceElement.getAttribute("slice")), evidenceElement.getAttribute("state"));  
+                	   }
+                	   
+                   }
+            	   
+               }
+              
+            }
         
-        for (int temp = 0; temp < nList.getLength(); temp++) {
-           Node nNode = nList.item(temp);
-           System.out.println("\nCurrent Element :" + nNode.getNodeName());}
+        }
 
 	}
 	
 	private static void printEvidence(Network net, StringBuilder code){
 		
 		ArrayList<TemporalEvidence> evidences = new ArrayList<TemporalEvidence>();
-		for(int t=0;t<net.getSliceCount();t++) 
-			for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) 
-				if(net.hasTemporalEvidence(h)) 
-					evidences.add(new TemporalEvidence(t, net.getNodeId(h), net.getTemporalEvidence(h, t)+1));	
+		for(int t=0;t<net.getSliceCount();t++) {
+			for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
+				if(net.hasTemporalEvidence(h)) {
+					if(net.isTemporalEvidence(h, t))
+						evidences.add(new TemporalEvidence(t, net.getNodeId(h), net.getTemporalEvidence(h, t)+1));
+				}			
+			}	
+		}
 			
 		boolean slicePrinted = false;
 		int slice=0;
@@ -549,7 +574,7 @@ public class Main {
 		}
 	}
 	
-	private static void printInference(Network net, StringBuilder code,String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
+	private static void printInference(Network net, StringBuilder code,String fileName, String caseName, String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
 		
 		code.append("% choose the inference engine\n" + 
 				"ec='"+ inferenceEngine +"';\n" + 
@@ -576,7 +601,13 @@ public class Main {
 				"\n" + 
 				"% Evidence\n" + 
 				"% first cells of evidence are for time 0\n");  
-				
+		try {
+			setEvidence(net,fileName,caseName);
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+		
+			System.err.println("Impossibile parsificare il caso salvato su file");
+			e.printStackTrace();
+		}		
 		printEvidence(net, code);
 			
 		/*code.append("t=5;\n" + 
@@ -660,13 +691,14 @@ public class Main {
 				"end");
 	}
 	
-	private static void printInference(Network net, StringBuilder code) {
+	private static void printInference(Network net, StringBuilder code, String fileName) {
 		
 		String ec;
 		char ff;
 		char fi;
 		int tStep;
 		int tSpan = net.getSliceCount();
+		String caseName = "";
 		String[] infEngines = {"JT","BK"}; 
 		Scanner scanner = new Scanner(System.in);
 		
@@ -680,6 +712,7 @@ public class Main {
 			tStep = scanner.nextInt();
 		}while(tStep<0 || tStep > tSpan);
 		
+		
 		do {
 			System.out.println("Fully factorized ? (Y/N)");
 			ff = Character.toUpperCase(scanner.nextLine().charAt(0));
@@ -690,8 +723,11 @@ public class Main {
 			fi = Character.toUpperCase(scanner.nextLine().charAt(0));
 		}while(fi!='F' || fi!='S');
 		
+		System.out.println("Inserisci il nome del caso salvato");
+		caseName = scanner.nextLine();
+		
 		scanner.close();
-		printInference(net,code, ec, (ff=='Y')?true:false, tSpan, tStep, (fi=='F')?true:false);
+		printInference(net,code, fileName ,caseName ,ec, (ff=='Y')?true:false, tSpan, tStep, (fi=='F')?true:false);
 		
 	}
 	

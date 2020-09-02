@@ -51,6 +51,10 @@
 			<evidence node="Node2" slice="4" state="State1" />
 			<evidence node="Node3" slice="6" state="State0" />
 		</case>
+		<case name="prova2" category="prova">
+			<description>descrizione 2</description>
+			<evidence node="Node2" slice="4" state="State1" />
+		</case>
 	</cases>
 	<extensions>
 		<genie version="1.0" app="GeNIe 2.1.621.1 ACADEMIC" name="Network1" faultnameformat="nodestate">
