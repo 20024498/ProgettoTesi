@@ -296,6 +296,13 @@ evidence=cell(n,T); % create the evidence cell array
 
 % Evidence
 % first cells of evidence are for time 0
+t=5;
+evidence{bnet.names('Periodic'),t+1}=1; 
+t=6;
+evidence{bnet.names('Periodic'),t+1}=2; 
+evidence{bnet.names('SuspArgICS'),t+1}=2; 
+t=7;
+evidence{bnet.names('CoherentDev'),t+1}=2; 
 % Campo Algoritmo di Inferenza  (filtering / smoothing)
 filtering=1;
 % filtering=0 --> smoothing (is the default - enter_evidence(engine,evidence))

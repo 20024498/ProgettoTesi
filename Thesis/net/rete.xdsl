@@ -139,6 +139,15 @@
 			<probabilities>1 0 0.5 0.5 0 1 0 1</probabilities>
 		</cpt>
 	</dynamic>
+	<cases>
+		<case name="prova1" category="prova">
+			<description>descrizione</description>
+			<evidence node="Periodic" slice="5" state="State0" />
+			<evidence node="Periodic" slice="6" state="State1" />
+			<evidence node="SuspArgICS" slice="6" state="State1" />
+			<evidence node="CoherentDev" slice="7" state="State1" />
+		</case>
+	</cases>
 	<extensions>
 		<genie version="1.0" app="GeNIe 2.1.621.1 ACADEMIC" name="Network1" faultnameformat="nodestate">
 			<plate leftwidth="100" rightwidth="100">20 30 1002 539</plate>

@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -23,8 +24,16 @@ import smile.*;
 
 public class Main {
 
-	public static void main(String[] args) {
+	
+	public static void main(String[] args){
 		
+		//INIZIALIZZAZIONE PATH DELLA NATIVE LIBRARY
+		try {
+			pathInit();
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e3) {
+			System.err.println("Impossibile settare il path della native library di Smile");
+			e3.printStackTrace();
+		}
 		
 		//LICENZA
 		try {
@@ -37,7 +46,7 @@ public class Main {
 		
 		//INIZIALIZZAZIONE RETE
 		Network net = new Network();
-		String fileName = "rete10.xdsl";
+		String fileName = "rete.xdsl";
 		String filePath = "net/"+fileName;
 		net.readFile(filePath);
 		
@@ -910,6 +919,13 @@ public class Main {
 					this.name=name;
 					this.state=state;
 				}	
+			}
+			
+			private static void pathInit() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+				 System.setProperty("java.library.path", "./libs" );
+				 Field fieldSysPath = ClassLoader.class.getDeclaredField( "sys_paths" );
+				 fieldSysPath.setAccessible( true );
+				 fieldSysPath.set( null, null );
 			}
 			
 			
