@@ -133,12 +133,12 @@ public class View {
 			public void actionPerformed(ActionEvent e) {
 			}
 		});
-		btnNetSelect.setBounds(12, 20, 140, 22);
+		btnNetSelect.setBounds(12, 20, 150, 22);
 		pannello1.add(btnNetSelect);
 		
 		pathTextField = new JTextField();
 		pathTextField.setEditable(false);
-		pathTextField.setBounds(164, 20, 232, 22);
+		pathTextField.setBounds(174, 20, 232, 22);
 		pannello1.add(pathTextField);
 		pathTextField.setColumns(10);
 		
