@@ -6,8 +6,21 @@ import javax.swing.JLabel;
 import javax.swing.JComboBox;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import javax.swing.border.EtchedBorder;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
 import javax.swing.JTextField;
 
 public class View {
@@ -32,7 +45,6 @@ public class View {
 	private Integer[] tStep = {1,2,3,4,5,6,7,8,9,10};
 	private String[] ff = {"No","Yes"};
 	private String[] infType = {"Smoothing","Filtering"};
-	private String[] sCases;
 	
 
 	/**
@@ -156,6 +168,31 @@ public class View {
 		comboBox6 = new JComboBox<String>(cases);
 		comboBox6.setBounds(12, 42, 140, 22);
 		pannello6.add(comboBox6);
+		
+		frameProgramma.setVisible(true);
+	}
+	
+	public static String[] retrieveCases (String fileName) throws ParserConfigurationException, SAXException, IOException {
+		ArrayList<String> casesArrList = new ArrayList<String>();
+		File inputFile = new File(fileName);
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(inputFile);
+        doc.getDocumentElement().normalize();
+        NodeList caseList = doc.getElementsByTagName("case");
+       
+        for (int i = 0; i < caseList.getLength(); i++) {
+           Node caseNode = caseList.item(i);
+         
+           if (caseNode.getNodeType() == Node.ELEMENT_NODE) {
+               Element caseElement = (Element) caseNode;
+               casesArrList.add(caseElement.getAttribute("name"));
+               
+            }
+        
+        }
+        String[] cases = new String[casesArrList.size()];
+		return casesArrList.toArray(cases);
 	}
 
 	public JFrame getFrameProgramma() {

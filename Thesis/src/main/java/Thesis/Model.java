@@ -4,16 +4,12 @@ import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Scanner;
-
 import org.apache.commons.text.StringEscapeUtils;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -24,47 +20,48 @@ import smile.*;
 
 public class Model {
 
+	String filePath;
+	Network net;
+	StringBuilder code;
 	
-	public static void start(String filePath){
+	public Model(String filePath) {
+		this.filePath = filePath;
+		this.net = new Network();
+		this.code = new StringBuilder();
 		
-		//INIZIALIZZAZIONE PATH DELLA NATIVE LIBRARY
+	}
+	
+	public void start(){
+		
+		
+		
+		//CONTROLLO ESTENSIONE
 		try {
-			pathInit();
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e3) {
-			System.err.println("Impossibile settare il path della native library di Smile");
-			e3.printStackTrace();
+			checkExtension(filePath);
+		} catch (Exception e3) {
+			e3.getMessage();
+			return;
 		}
 		
-		//LICENZA
-		try {
-			licenseInit();
-		} catch (FileNotFoundException e1) {
-			System.err.println("Impossibile recuperare il file di licenza\n");
-		} catch (IOException e2) {
-			System.err.println("Impossibile completare l'operazione di lettura della licenza\n");
-		}
-		
-		//INIZIALIZZAZIONE RETE
-		Network net = new Network();
+		//CARICAMENTO RETE
 		net.readFile(filePath);
 		
 		//INIZIALIZZAZIONE CODICE
-		StringBuilder code = new StringBuilder();
 		code.append("clear \n\n");
 		
 		//VARIABILI NASCOSTE
-		ArrayList<Integer> hStates = hiddenVariables(net, code);
+		ArrayList<Integer> hStates = hiddenVariables();
 	
 		//VARIABILI OSSERVABILI (indicate con un colore diverso da quello di default)
-		ArrayList<Integer> obs = observableVariables(net, code);
+		ArrayList<Integer> obs = observableVariables();
 
 		//TEST HIDDEN MARKOV MODEL
 		try {
-			hmmTest(net, hStates, obs);
+			hmmTest(hStates, obs);
 			System.out.println("RISPETTA HIDDEN MARKOV MODEL \n");
 		}
 		catch(NotHMMException e) {
-			System.err.println("NON RISPETTA HIDDEN MARKOV MODEL \n");
+			System.err.println("NON RISPETTA HIDDEN MARKOV MODEL");
 			System.err.println(e.getMessage());
 		}
 		
@@ -75,19 +72,19 @@ public class Model {
 		code.append("n=length(names);\n\n");
 		
 		//ARCHI INTRASLICE
-		intrasliceArcs(net, code);
+		intrasliceArcs();
 		
 		//MATRICE DI ADIACENZA ARCHI INTRASLICE
 		code.append("[intra, names] = mk_adj_mat(intrac, names, 1);\n\n");
 		
 		//ARCHI INTERSLICE (SOLO ORDINE 1)
-		intersliceArcs(net, code);
+		intersliceArcs();
 		
 		//MATRICE DI ADIACENZA ARCHI INTERSLICE
 		code.append("inter = mk_adj_mat(interc, names, 0);\n\n");
 		
 		//NUMERO DI STATI DI CIASCUN NODO
-		numberOfStates(net, code);
+		numberOfStates();
 	
 		//CREAZIONE RETE BAYESIANA
 		code.append("bnet = mk_dbn(intra, inter, ns, 'names', names);\n\n");
@@ -95,7 +92,7 @@ public class Model {
 		//CREAZIONE LISTE NODI DI CUI CALCOLARE CPD
 		ArrayList<Integer> tempNodes = new ArrayList<Integer>();
 		ArrayList<Integer> cpdNodes = new ArrayList<Integer>();
-		cpdNodesCalc(net, hStates, obs, cpdNodes, tempNodes);
+		cpdNodesCalc(hStates, obs, cpdNodes, tempNodes);
 		
 		//CICLO CALCOLO CPD
 		int tresh = cpdNodes.size() - tempNodes.size();
@@ -111,11 +108,11 @@ public class Model {
 				
 				// NO ARCHI TEMPORALI ENTRANTI
 				if(i<tresh) 
-					printTabularCpd(net, h, code);		
+					printTabularCpd(h);		
 				
 				// ARCHI TEMPORALI ENTRANTI
 				else 
-					printTempTabularCpd(net, h, code);			
+					printTempTabularCpd(h);			
 			}
 			
 			// NODO DETERMINISTICO
@@ -125,16 +122,16 @@ public class Model {
 				if(i<tresh) {
 					
 					// NODO DI TIPO OR
-					if(checkOR(net, h,code)) {
-						printBooleanCpdOR(net, h, code);
+					if(checkOR(h)) {
+						printBooleanCpdOR(h);
 					}
 					// NODO DI TIPO AND
-					else if(checkAND(net, h,code)) {
-						printBooleanCpdAND(net, h, code);
+					else if(checkAND(h)) {
+						printBooleanCpdAND(h);
 					}
 					//NODI DETERMINISTICI GENERICI
 					else {
-						printTabularCpd(net, h, code);
+						printTabularCpd(h);
 					}	
 				}
 				
@@ -142,7 +139,7 @@ public class Model {
 				else {
 					
 					// NODO DETERMINISTICO GENERICO
-					printTempTabularCpd(net, h, code);	
+					printTempTabularCpd(h);	
 				}
 			}
 			
@@ -153,35 +150,35 @@ public class Model {
 				if(i<tresh) {
 					
 					//NODO DI TIPO NOISY-OR
-					if(checkNoisyOr(net,h)) 
-						printNoisyOr(net,h,code);
+					if(checkNoisyOr(h)) 
+						printNoisyOr(h);
 					
 					//NODO DI TIPO NOISY MAX
 					else 
-						printNoisyMax(net, h, code);		
+						printNoisyMax(h);		
 				}
 				
 				//ARCHI TEMPORALI ENTRANTI
 				else {
 					
 					//NODO DI TIPO NOISY MAX
-						printTempNoisyMax(net, h, code);
+						printTempNoisyMax(h);
 				}
 			}	
 		}
-			
+		/*
 		//INFERENZA
-		printInference(net,code,filePath,"prova1","JT",true,11,1,true);
+		printInference(filePath,"prova1","JT",true,11,1,true);
 		
 		//FILE DI OUTPUT
-		saveFile(code.toString(),"MatlabScript_"+extractFileName(filePath));
+		saveFile("MatlabScript_"+extractFileName(filePath));
 		System.out.println(code.toString());	
-			
+		*/	
 	}
 	
 	
 	
-	private static ArrayList<Integer> hiddenVariables(Network net, StringBuilder code){
+	private ArrayList<Integer> hiddenVariables(){
 		ArrayList<Integer> hStates = new ArrayList<Integer>();
 		String init = "h_states = {";
 		StringBuilder str = new StringBuilder (init);
@@ -203,7 +200,7 @@ public class Model {
 		return hStates;
 	}
 	
-	private static ArrayList<Integer> observableVariables(Network net, StringBuilder code){
+	private ArrayList<Integer> observableVariables(){
 		ArrayList<Integer> obs = new ArrayList<Integer>();
 		String init = "obs = {";
 		StringBuilder str = new StringBuilder (init);
@@ -226,7 +223,7 @@ public class Model {
 	}
 	
 	
-	private static void hmmTest(Network net,ArrayList<Integer> hStates, ArrayList<Integer> obs) throws NotHMMException {
+	private void hmmTest(ArrayList<Integer> hStates, ArrayList<Integer> obs) throws NotHMMException {
 		
 		if(hStates.isEmpty())
 			throw new NotHMMException("Nessuno stato nascosto trovato");
@@ -245,7 +242,7 @@ public class Model {
 					
 	}
 	
-	private static void intrasliceArcs(Network net, StringBuilder code) {
+	private void intrasliceArcs() {
 		
 		String init = "intrac = {";
 		StringBuilder str = new StringBuilder (init);
@@ -267,7 +264,7 @@ public class Model {
 		code.append("};\n\n");
 	}
 	
-	private static void intersliceArcs(Network net, StringBuilder code) {
+	private void intersliceArcs() {
 		
 		String init = "interc = {";
 		StringBuilder str = new StringBuilder (init);
@@ -292,7 +289,7 @@ public class Model {
 		
 	}
 	
-	private static void numberOfStates (Network net, StringBuilder code) {
+	private void numberOfStates () {
 		
 		String init = "ns = [";
 		StringBuilder str = new StringBuilder (init);
@@ -306,7 +303,7 @@ public class Model {
 		code.append("];\n\n");
 	}
 	
-	private static void cpdNodesCalc(Network net, ArrayList<Integer> hStates, ArrayList<Integer> obs, ArrayList<Integer> cpdNodes, ArrayList<Integer> tempNodes ) {
+	private void cpdNodesCalc(ArrayList<Integer> hStates, ArrayList<Integer> obs, ArrayList<Integer> cpdNodes, ArrayList<Integer> tempNodes ) {
 		
 		for(Integer i : hStates)
 			cpdNodes.add(i);
@@ -329,24 +326,24 @@ public class Model {
 				}
 	}
 	
-	private static void printTabularCpd(Network net, int nodeHandle,StringBuilder code) {
+	private void printTabularCpd(int nodeHandle) {
 		
 		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
-		printParentOrder(net, nodeHandle, code);
-		myCpdPrint(net, nodeHandle,code);
+		printParentOrder(nodeHandle);
+		myCpdPrint(nodeHandle);
 		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'CPT',cpt);\n");
 		code.append("clear cpt;\n\n");	
 	}
 	
-	private static void printTempTabularCpd(Network net, int nodeHandle,StringBuilder code) {
+	private void printTempTabularCpd(int nodeHandle) {
 		
 		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 2 \n");
-		printTempParentOrder(net, nodeHandle, code);
-		myTempCpdPrint(net, nodeHandle,code);
+		printTempParentOrder(nodeHandle);
+		myTempCpdPrint(nodeHandle);
 		int nParents = net.getTemporalParents(nodeHandle, 1).length + net.getParents(nodeHandle).length;
 		boolean moreParents = nParents>1;
 		if(moreParents)
-			cpt1Print(net, nodeHandle, code);
+			cpt1Print(nodeHandle);
 		code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeId(nodeHandle)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeId(nodeHandle)+"'),'CPT',"+(moreParents?"cpt1":"cpt")+");\n");
 		code.append("clear cpt; ");
 		if(moreParents) 
@@ -356,7 +353,7 @@ public class Model {
 	
 	
 	//l'output corrispondente allo stato falso deve essere messo per primo
-	private static boolean checkAND(Network net, int h,StringBuilder code) {
+	private boolean checkAND(int h) {
 		if(net.getOutcomeCount(h)>2)
 			return false;
 		double[] defs = net.getNodeDefinition(h);
@@ -381,7 +378,7 @@ public class Model {
 	
 	
 	//l'output corrispondente allo stato falso deve essere messo per primo
-	private static boolean checkOR(Network net, int h,StringBuilder code) {
+	private boolean checkOR(int h) {
 		if(net.getOutcomeCount(h)>2)
 			return false;
 		double[] defs = net.getNodeDefinition(h);
@@ -404,24 +401,24 @@ public class Model {
 		
 	}
 	
-	private static void printBooleanCpdAND (Network net, int nodeHandle,StringBuilder code) {
+	private void printBooleanCpdAND (int nodeHandle) {
 		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
-		printParentOrder(net, nodeHandle, code);
+		printParentOrder(nodeHandle);
 		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'named',");
 		code.append("'all');\n");
 		code.append("clear cpt;\n\n");
 	}
 	
-	private static void printBooleanCpdOR (Network net, int nodeHandle,StringBuilder code) {
+	private void printBooleanCpdOR (int nodeHandle) {
 		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
-		printParentOrder(net, nodeHandle, code);
+		printParentOrder(nodeHandle);
 		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=boolean_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'named',");
 		code.append("'any');\n");
 		code.append("clear cpt;\n\n");
 	}
 	
 	
-	private static boolean checkNoisyOr(Network net, int nodeHandle) {
+	private boolean checkNoisyOr(int nodeHandle) {
 		if(net.getNodeType(nodeHandle) != Network.NodeType.NOISY_MAX)
 			return false;
 		int parents[] = net.getParents(nodeHandle);
@@ -434,10 +431,10 @@ public class Model {
 		return true;
 	}
 	
-	private static void printNoisyOr(Network net, int nodeHandle,StringBuilder code) {
+	private void printNoisyOr(int nodeHandle) {
 		
 		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
-		printParentOrder(net, nodeHandle, code);
+		printParentOrder(nodeHandle);
 		code.append("leak=");
 		double[] defs = net.getNodeDefinition(nodeHandle);
 		code.append(defs[defs.length-1]+";\n");
@@ -457,10 +454,10 @@ public class Model {
 		
 	}
 	
-	private static void printNoisyMax(Network net, int nodeHandle,StringBuilder code) {
+	private void printNoisyMax(int nodeHandle) {
 		
 		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
-		printParentOrder(net, nodeHandle, code);
+		printParentOrder(nodeHandle);
 		double[] cpt = net.getNoisyExpandedDefinition(nodeHandle);
 		int[] parents = net.getParents(nodeHandle); 
 		int[] pIndex = new int[parents.length];
@@ -494,22 +491,22 @@ public class Model {
 	
 	
 	
-	private static void printTempNoisyMax(Network net, int nodeHandle,StringBuilder code) {
+	private void printTempNoisyMax(int nodeHandle) {
 	
 		net.setNodeType(nodeHandle, Network.NodeType.CPT);
-		printTempTabularCpd(net, nodeHandle, code);
+		printTempTabularCpd(nodeHandle);
 		net.setNodeType(nodeHandle, Network.NodeType.NOISY_MAX);
 		
 	}
 	
-	private static void saveFile(String code,String fileName) {
+	public void saveFile(String fileName) {
 		StringBuilder scriptName = new StringBuilder();
 		scriptName.append(fileName);
 		scriptName.append(".m");
 	    BufferedWriter writer;
 		try {
 			writer = new BufferedWriter(new FileWriter(scriptName.toString()));
-			writer.write(code);
+			writer.write(code.toString());
 		    writer.close();
 		}
 		catch (IOException e) {
@@ -517,7 +514,7 @@ public class Model {
 		}  
 	}
 	
-	private static void setEvidence(Network net,String fileName, String caseName) throws ParserConfigurationException, SAXException, IOException {
+	private void setEvidence(String fileName, String caseName) throws ParserConfigurationException, SAXException, IOException {
 		
 		File inputFile = new File(fileName);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -553,7 +550,7 @@ public class Model {
 
 	}
 	
-	private static void printEvidence(Network net, StringBuilder code){
+	private void printEvidence(){
 		
 		ArrayList<TemporalEvidence> evidences = new ArrayList<TemporalEvidence>();
 		for(int t=0;t<net.getSliceCount();t++) {
@@ -579,7 +576,7 @@ public class Model {
 		}
 	}
 	
-	private static void printInference(Network net, StringBuilder code,String fileName, String caseName, String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
+	public void printInference(String fileName, String caseName, String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
 		
 		code.append("% choose the inference engine\n" + 
 				"ec='"+ inferenceEngine +"';\n" + 
@@ -607,14 +604,14 @@ public class Model {
 				"% Evidence\n" + 
 				"% first cells of evidence are for time 0\n");  
 		try {
-			setEvidence(net,fileName,caseName);
+			setEvidence(fileName,caseName);
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 		
 			System.err.println("Impossibile parsificare il caso salvato su file");
 			e.printStackTrace();
 		}	
 		
-		printEvidence(net, code);
+		printEvidence();
 				
 		code.append("% Campo Algoritmo di Inferenza  (filtering / smoothing)\n" + 
 				"filtering="+((filtering==true)?"1":"0")+";\n" + 
@@ -688,7 +685,7 @@ public class Model {
 				"end");
 	}
 	
-	private static void printInference(Network net, StringBuilder code, String fileName) {
+	/*private void printInference(String fileName) {
 		
 		String ec;
 		char ff;
@@ -724,16 +721,16 @@ public class Model {
 		caseName = scanner.nextLine();
 		
 		scanner.close();
-		printInference(net,code, fileName ,caseName ,ec, (ff=='Y')?true:false, tSpan, tStep, (fi=='F')?true:false);
+		printInference(fileName ,caseName ,ec, (ff=='Y')?true:false, tSpan, tStep, (fi=='F')?true:false);
 		
-	}
+	}*/
 	
 	
 
 
 
 	
-		private static void myCpdPrint(Network net, int nodeHandle, StringBuilder code) {
+		private void myCpdPrint(int nodeHandle) {
 			double[] cpt = net.getNodeDefinition(nodeHandle); 
 			int[] parents = net.getParents(nodeHandle); 
 			int[] pIndex = new int[parents.length];
@@ -761,7 +758,7 @@ public class Model {
 			}
 			
 		}
-			private static void myTempCpdPrint(Network net, int nodeHandle,StringBuilder code) {
+			private void myTempCpdPrint(int nodeHandle) {
 				double[] cpt = net.getNodeTemporalDefinition(nodeHandle, 1); 
 				TemporalInfo[] tParents = net.getTemporalParents(nodeHandle, 1); 
 				
@@ -801,7 +798,7 @@ public class Model {
 			
 		}
 			
-			private static void cpt1Print(Network net, int nodeHandle,StringBuilder code){
+			private void cpt1Print(int nodeHandle){
 				int[] parents = net.getParents(nodeHandle);
 				TemporalInfo[] tParents = net.getTemporalParents(nodeHandle, 1); 
 				ArrayList<Integer> parentsList = new ArrayList<Integer>();
@@ -839,8 +836,8 @@ public class Model {
 					
 			}
 			
-			private static void printParentOrder(Network net, int nodeHandle,StringBuilder code) {
-				//%parent order:{SpoofComMes, NewICS}
+			private void printParentOrder(int nodeHandle) {
+				
 				code.append("%parent order:{");
 				
 					int[] parents = net.getParents(nodeHandle);
@@ -856,7 +853,7 @@ public class Model {
 				code.append("}\n");
 			}
 			
-			private static void printTempParentOrder(Network net, int nodeHandle,StringBuilder code) {
+			private void printTempParentOrder(int nodeHandle) {
 				//%parent order:{SpoofComMes, NewICS}
 				code.append("%parent order:{");
 				boolean noParents = true;
@@ -884,8 +881,8 @@ public class Model {
 			}
 
 			
-			private static void truncList (StringBuilder code, int delChar) {
-				code.setLength(code.length()-delChar);
+			private void truncList (StringBuilder str, int delChar) {
+				str.setLength(str.length()-delChar);
 			}
 			
 
@@ -909,7 +906,7 @@ public class Model {
 				}	
 			}
 			
-			private static void pathInit() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+			public static void pathInit() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 				 System.setProperty("java.library.path", "./libs" );
 				 Field fieldSysPath = ClassLoader.class.getDeclaredField( "sys_paths" );
 				 fieldSysPath.setAccessible( true );
@@ -917,7 +914,7 @@ public class Model {
 			}
 			
 			
-			private static License licenseInit() throws IOException {
+			public static License licenseInit() throws IOException {
 				InputStream is = new FileInputStream("license/License.java");
 				BufferedReader buf = new BufferedReader(new InputStreamReader(is));
 				String line = buf.readLine();
@@ -950,35 +947,34 @@ public class Model {
 				return new smile.License(splitStr[0],bytes);	
 			}
 			
-		public static String[] retrieveCases (String fileName) throws ParserConfigurationException, SAXException, IOException {
-			ArrayList<String> casesArrList = new ArrayList<String>();
-			File inputFile = new File(fileName);
-	        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-	        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-	        Document doc = dBuilder.parse(inputFile);
-	        doc.getDocumentElement().normalize();
-	        NodeList caseList = doc.getElementsByTagName("case");
-	       
-	        for (int i = 0; i < caseList.getLength(); i++) {
-	           Node caseNode = caseList.item(i);
-	         
-	           if (caseNode.getNodeType() == Node.ELEMENT_NODE) {
-	               Element caseElement = (Element) caseNode;
-	               casesArrList.add(caseElement.getAttribute("name"));
-	               
-	            }
-	        
-	        }
-	        String[] cases = new String[casesArrList.size()];
-			return casesArrList.toArray(cases);
-		}
+
 		
-		private static String extractFileName (String filePath) {
-			//TODO check estensione
+		public String extractFileName (String filePath) {
 			String[] dirs = filePath.split("/");
 			StringBuilder fileName = new StringBuilder(dirs[dirs.length-1]);
 			fileName.setLength(fileName.length()-5);
 			return fileName.toString();
 		}
+		
+		private static void checkExtension(String filePath) throws Exception {
+			if(filePath.length()<=5)
+				throw new Exception("Formato file non supportato");
+			if(!filePath.substring(filePath.length()-5, filePath.length()).equals(".xdsl"))
+				throw new Exception("Formato file non supportato");
+		}
+
+		public String getFilePath() {
+			return filePath;
+		}
+
+		public Network getNet() {
+			return net;
+		}
+
+		public StringBuilder getCode() {
+			return code;
+		}
+		
+		
 
 }
