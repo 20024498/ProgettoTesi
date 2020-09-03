@@ -11,9 +11,11 @@ public class Main {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					View window = new View();
+					String filePath = "net/rete7.xdsl";
+					String[] cases = Model.retrieveCases(filePath);
+					View window = new View(cases);
 					window.getFrameProgramma().setVisible(true);
-					Model.start();
+					Model.start(filePath);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

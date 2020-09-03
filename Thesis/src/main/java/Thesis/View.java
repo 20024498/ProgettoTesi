@@ -32,19 +32,20 @@ public class View {
 	private Integer[] tStep = {1,2,3,4,5,6,7,8,9,10};
 	private String[] ff = {"No","Yes"};
 	private String[] infType = {"Smoothing","Filtering"};
+	private String[] sCases;
 	
 
 	/**
 	 * Create the application.
 	 */
-	public View() {
-		initialize();
+	public View(String[] cases) {
+		initialize(cases);
 	}
 
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
+	private void initialize(String[] cases) {
 		frameProgramma = new JFrame();
 		frameProgramma.setResizable(false);
 		frameProgramma.setTitle("Programma");
@@ -65,7 +66,7 @@ public class View {
 		pannello2.setLayout(null);
 		
 		JLabel label2 = new JLabel("Seleziona motore inferenziale:");
-		label2.setBounds(12, 13, 200, 16);
+		label2.setBounds(12, 13, 220, 16);
 		pannello2.add(label2);
 		
 		comboBox2 = new JComboBox<String>(infEng);
@@ -152,7 +153,7 @@ public class View {
 		label6.setBounds(12, 13, 200, 16);
 		pannello6.add(label6);
 		
-		comboBox6 = new JComboBox<String>();
+		comboBox6 = new JComboBox<String>(cases);
 		comboBox6.setBounds(12, 42, 140, 22);
 		pannello6.add(comboBox6);
 	}

@@ -25,7 +25,7 @@ import smile.*;
 public class Model {
 
 	
-	public static void start(){
+	public static void start(String filePath){
 		
 		//INIZIALIZZAZIONE PATH DELLA NATIVE LIBRARY
 		try {
@@ -46,8 +46,6 @@ public class Model {
 		
 		//INIZIALIZZAZIONE RETE
 		Network net = new Network();
-		String fileName = "rete.xdsl";
-		String filePath = "net/"+fileName;
 		net.readFile(filePath);
 		
 		//INIZIALIZZAZIONE CODICE
@@ -176,7 +174,7 @@ public class Model {
 		printInference(net,code,filePath,"prova1","JT",true,11,1,true);
 		
 		//FILE DI OUTPUT
-		saveFile(code.toString(),fileName);
+		saveFile(code.toString(),"MatlabScript_"+extractFileName(filePath));
 		System.out.println(code.toString());	
 			
 	}
@@ -505,10 +503,9 @@ public class Model {
 	}
 	
 	private static void saveFile(String code,String fileName) {
-		StringBuilder scriptName = new StringBuilder("MatlabScript_");
+		StringBuilder scriptName = new StringBuilder();
 		scriptName.append(fileName);
-		scriptName.setLength(scriptName.length()-4);
-		scriptName.append("m");
+		scriptName.append(".m");
 	    BufferedWriter writer;
 		try {
 			writer = new BufferedWriter(new FileWriter(scriptName.toString()));
@@ -522,7 +519,6 @@ public class Model {
 	
 	private static void setEvidence(Network net,String fileName, String caseName) throws ParserConfigurationException, SAXException, IOException {
 		
-		//ArrayList<TemporalEvidence> evidenceArray = new ArrayList<Main.TemporalEvidence>();
 		File inputFile = new File(fileName);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -953,5 +949,36 @@ public class Model {
 					
 				return new smile.License(splitStr[0],bytes);	
 			}
+			
+		public static String[] retrieveCases (String fileName) throws ParserConfigurationException, SAXException, IOException {
+			ArrayList<String> casesArrList = new ArrayList<String>();
+			File inputFile = new File(fileName);
+	        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+	        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+	        Document doc = dBuilder.parse(inputFile);
+	        doc.getDocumentElement().normalize();
+	        NodeList caseList = doc.getElementsByTagName("case");
+	       
+	        for (int i = 0; i < caseList.getLength(); i++) {
+	           Node caseNode = caseList.item(i);
+	         
+	           if (caseNode.getNodeType() == Node.ELEMENT_NODE) {
+	               Element caseElement = (Element) caseNode;
+	               casesArrList.add(caseElement.getAttribute("name"));
+	               
+	            }
+	        
+	        }
+	        String[] cases = new String[casesArrList.size()];
+			return casesArrList.toArray(cases);
+		}
+		
+		private static String extractFileName (String filePath) {
+			//TODO check estensione
+			String[] dirs = filePath.split("/");
+			StringBuilder fileName = new StringBuilder(dirs[dirs.length-1]);
+			fileName.setLength(fileName.length()-5);
+			return fileName.toString();
+		}
 
 }
