@@ -255,9 +255,11 @@ public class Model {
 	private void intersliceArcs() {
 		
 		String init = "interc = {";
+		int initlen = init.length();
 		StringBuilder str = new StringBuilder (init);
 		
-		boolean temp = false;
+		//boolean temp = false;
+		/*
 		for (int p : net.getAllNodes()) {
 			for (int c : net.getAllNodes()) {
 				if(net.temporalArcExists(p, c, 1)) {
@@ -269,7 +271,25 @@ public class Model {
 				}	
 			}
 		}
-		if(temp==true) 
+		
+		*/
+		
+		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
+			TemporalInfo[] tParents = {};
+			try {tParents = net.getTemporalParents(h, 1);
+			}catch(Exception e) {}
+			
+			for(TemporalInfo t : tParents) {
+				str.append("'"+net.getNodeId(t.handle)+"'");
+				str.append(", ");
+				str.append("'"+net.getNodeId(h)+"'");
+				str.append(";\n");
+			}
+				
+		}
+			
+		
+		if(init.length()>initlen) 
 			truncList(str, 2);
 		
 		code.append(str);
