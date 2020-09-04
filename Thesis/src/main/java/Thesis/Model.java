@@ -20,28 +20,23 @@ import smile.*;
 
 public class Model {
 
-	String filePath;
-	Network net;
-	StringBuilder code;
+	private String filePath;
+	private Network net;
+	private StringBuilder code;
+	private boolean hmm;
+	private String hmmError;
 	
-	public Model(String filePath) {
-		this.filePath = filePath;
+	public Model() {
+		this.filePath = "";
 		this.net = new Network();
 		this.code = new StringBuilder();
+		this.hmm=true;
+		this.hmmError="";
 		
 	}
 	
-	public void start(){
+	public void netCreation(){
 		
-		
-		
-		//CONTROLLO ESTENSIONE
-		try {
-			checkExtension(filePath);
-		} catch (Exception e3) {
-			e3.getMessage();
-			return;
-		}
 		
 		//CARICAMENTO RETE
 		net.readFile(filePath);
@@ -56,13 +51,13 @@ public class Model {
 		ArrayList<Integer> obs = observableVariables();
 
 		//TEST HIDDEN MARKOV MODEL
+		hmm=true;
 		try {
 			hmmTest(hStates, obs);
-			System.out.println("RISPETTA HIDDEN MARKOV MODEL \n");
 		}
 		catch(NotHMMException e) {
-			System.err.println("NON RISPETTA HIDDEN MARKOV MODEL");
-			System.err.println(e.getMessage());
+			hmm=false;
+			hmmError = e.getMessage();
 		}
 		
 		//INSIEME DEI NOMI
@@ -166,14 +161,7 @@ public class Model {
 				}
 			}	
 		}
-		/*
-		//INFERENZA
-		printInference(filePath,"prova1","JT",true,11,1,true);
 		
-		//FILE DI OUTPUT
-		saveFile("MatlabScript_"+extractFileName(filePath));
-		System.out.println(code.toString());	
-		*/	
 	}
 	
 	
@@ -684,52 +672,7 @@ public class Model {
 				"	end\n" + 
 				"end");
 	}
-	
-	/*private void printInference(String fileName) {
 		
-		String ec;
-		char ff;
-		char fi;
-		int tStep;
-		int tSpan = net.getSliceCount();
-		String caseName = "";
-		String[] infEngines = {"JT","BK"}; 
-		Scanner scanner = new Scanner(System.in);
-		
-		do {
-			System.out.println("Inserisci il motore inferenziale: ('JT','BK',..)");
-			ec = scanner.nextLine();
-		}while(!Arrays.asList(infEngines).contains(ec.toUpperCase()));
-		
-		do {
-			System.out.println("Inserisci incremento dei time step: ('1','2',ecc...)");
-			tStep = scanner.nextInt();
-		}while(tStep<0 || tStep > tSpan);
-		
-		
-		do {
-			System.out.println("Fully factorized ? (Y/N)");
-			ff = Character.toUpperCase(scanner.nextLine().charAt(0));
-		}while(ff!='Y' || ff!= 'N');
-		
-		do {
-			System.out.println("Filtering o Smoothing ? (F/S)");
-			fi = Character.toUpperCase(scanner.nextLine().charAt(0));
-		}while(fi!='F' || fi!='S');
-		
-		System.out.println("Inserisci il nome del caso salvato");
-		caseName = scanner.nextLine();
-		
-		scanner.close();
-		printInference(fileName ,caseName ,ec, (ff=='Y')?true:false, tSpan, tStep, (fi=='F')?true:false);
-		
-	}*/
-	
-	
-
-
-
-	
 		private void myCpdPrint(int nodeHandle) {
 			double[] cpt = net.getNodeDefinition(nodeHandle); 
 			int[] parents = net.getParents(nodeHandle); 
@@ -956,7 +899,7 @@ public class Model {
 			return fileName.toString();
 		}
 		
-		private static void checkExtension(String filePath) throws Exception {
+		public static void checkExtension(String filePath) throws Exception {
 			if(filePath.length()<=5)
 				throw new Exception("Formato file non supportato");
 			if(!filePath.substring(filePath.length()-5, filePath.length()).equals(".xdsl"))
@@ -966,6 +909,10 @@ public class Model {
 		public String getFilePath() {
 			return filePath;
 		}
+		
+		public void setFilePath(String filePath) {
+			this.filePath = filePath;
+		}
 
 		public Network getNet() {
 			return net;
@@ -973,6 +920,14 @@ public class Model {
 
 		public StringBuilder getCode() {
 			return code;
+		}
+
+		public boolean isHmm() {
+			return hmm;
+		}
+
+		public String getHmmError() {
+			return hmmError;
 		}
 		
 		

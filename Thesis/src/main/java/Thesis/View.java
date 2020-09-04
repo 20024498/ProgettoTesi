@@ -5,11 +5,9 @@ import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
 import javax.swing.JButton;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.awt.event.ActionEvent;
 import javax.swing.border.EtchedBorder;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,7 +38,7 @@ public class View {
 	private JComboBox<String> comboBox5;
 	private JComboBox<String> comboBox6;
 	private JButton btnNetSelect;
-	private JButton btnEsegui;
+	private JButton btnExecute;
 	private String[] infEng = {"JT","BK"};
 	private Integer[] tStep = {1,2,3,4,5,6,7,8,9,10};
 	private String[] ff = {"No","Yes"};
@@ -50,14 +48,14 @@ public class View {
 	/**
 	 * Create the application.
 	 */
-	public View(String[] cases) {
-		initialize(cases);
+	public View() {
+		initialize();
 	}
 
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize(String[] cases) {
+	private void initialize() {
 		frameProgramma = new JFrame();
 		frameProgramma.setResizable(false);
 		frameProgramma.setTitle("Programma");
@@ -70,6 +68,22 @@ public class View {
 		panelPrincipale.setBounds(0, 0, 444, 585);
 		frameProgramma.getContentPane().add(panelPrincipale);
 		panelPrincipale.setLayout(null);
+		
+		pannello1 = new JPanel();
+		pannello1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+		pannello1.setBounds(12, 13, 420, 62);
+		panelPrincipale.add(pannello1);
+		pannello1.setLayout(null);
+		
+		btnNetSelect = new JButton("Seleziona Rete");
+		btnNetSelect.setBounds(12, 20, 150, 22);
+		pannello1.add(btnNetSelect);
+		
+		pathTextField = new JTextField();
+		pathTextField.setEditable(false);
+		pathTextField.setBounds(174, 20, 232, 22);
+		pannello1.add(pathTextField);
+		pathTextField.setColumns(10);
 		
 		pannello2 = new JPanel();
 		pannello2.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -127,34 +141,6 @@ public class View {
 		comboBox5.setBounds(12, 42, 140, 22);
 		pannello5.add(comboBox5);
 		
-		btnEsegui = new JButton("ESEGUI");
-		btnEsegui.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-			}
-		});
-		btnEsegui.setBounds(170, 528, 120, 44);
-		panelPrincipale.add(btnEsegui);
-		
-		pannello1 = new JPanel();
-		pannello1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		pannello1.setBounds(12, 13, 420, 62);
-		panelPrincipale.add(pannello1);
-		pannello1.setLayout(null);
-		
-		btnNetSelect = new JButton("Seleziona Rete");
-		btnNetSelect.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
-		btnNetSelect.setBounds(12, 20, 150, 22);
-		pannello1.add(btnNetSelect);
-		
-		pathTextField = new JTextField();
-		pathTextField.setEditable(false);
-		pathTextField.setBounds(174, 20, 232, 22);
-		pannello1.add(pathTextField);
-		pathTextField.setColumns(10);
-		
 		pannello6 = new JPanel();
 		pannello6.setLayout(null);
 		pannello6.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -165,9 +151,13 @@ public class View {
 		label6.setBounds(12, 13, 200, 16);
 		pannello6.add(label6);
 		
-		comboBox6 = new JComboBox<String>(cases);
+		comboBox6 = new JComboBox<String>();
 		comboBox6.setBounds(12, 42, 140, 22);
 		pannello6.add(comboBox6);
+		
+		btnExecute = new JButton("ESEGUI");
+		btnExecute.setBounds(170, 528, 120, 44);
+		panelPrincipale.add(btnExecute);
 		
 		frameProgramma.setVisible(true);
 	}
@@ -255,8 +245,8 @@ public class View {
 		return btnNetSelect;
 	}
 
-	public JButton getBtnEsegui() {
-		return btnEsegui;
+	public JButton getBtnExecute() {
+		return btnExecute;
 	}
 
 	public void setFrameProgramma(JFrame frameProgramma) {
@@ -319,8 +309,8 @@ public class View {
 		this.btnNetSelect = btnNetSelect;
 	}
 
-	public void setBtnEsegui(JButton btnEsegui) {
-		this.btnEsegui = btnEsegui;
+	public void setBtnExecute(JButton btnExecute) {
+		this.btnExecute = btnExecute;
 	}
 
 	
