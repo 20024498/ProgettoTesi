@@ -762,9 +762,9 @@ public class Model {
 					
 				StringBuilder idx = new StringBuilder();
 				code.append("},names, bnet.dag, cpt,[");
-				for(Integer t : tparentsList)
-					if(parentsList.contains(t))
-						idx.append(family.lastIndexOf(t)+1+",");
+				
+				for(Integer p:parentsList)
+					idx.append(family.lastIndexOf(p)+1+",");
 				
 				if(idx.length()>0)
 					truncList(idx, 1);

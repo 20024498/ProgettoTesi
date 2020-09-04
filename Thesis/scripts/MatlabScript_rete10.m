@@ -291,7 +291,7 @@ cpt(1,1,:)=[1.0, 0.0];
 cpt(1,2,:)=[1.0, 0.0];
 cpt(2,1,:)=[0.994351, 0.005649];
 cpt(2,2,:)=[0.0, 1.0];
-cpt1=mk_named_CPT_inter({'ICSServ', 'ICSMasq', 'ICSMasq'},names, bnet.dag, cpt,[]);
+cpt1=mk_named_CPT_inter({'ICSServ', 'ICSMasq', 'ICSMasq'},names, bnet.dag, cpt,[1]);
 bnet.CPD{bnet.eclass2(bnet.names('ICSMasq'))}=tabular_CPD(bnet,n+bnet.names('ICSMasq'),'CPT',cpt1);
 clear cpt; clear cpt1;
 
@@ -301,7 +301,7 @@ cpt(1,1,:)=[1.0, 0.0];
 cpt(1,2,:)=[1.0, 0.0];
 cpt(2,1,:)=[0.98331628, 0.01668372];
 cpt(2,2,:)=[0.0, 1.0];
-cpt1=mk_named_CPT_inter({'ICSMasq', 'SpoofComMes', 'SpoofComMes'},names, bnet.dag, cpt,[]);
+cpt1=mk_named_CPT_inter({'ICSMasq', 'SpoofComMes', 'SpoofComMes'},names, bnet.dag, cpt,[1]);
 bnet.CPD{bnet.eclass2(bnet.names('SpoofComMes'))}=tabular_CPD(bnet,n+bnet.names('SpoofComMes'),'CPT',cpt1);
 clear cpt; clear cpt1;
 

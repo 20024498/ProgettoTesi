@@ -26,21 +26,22 @@ intrac = {'WrongReact', 'ICSCompr';
 [intra, names] = mk_adj_mat(intrac, names, 1);
 
 interc = {'ModConLog', 'ModConLog';
-'ModConLog', 'WrongReact';
 'WrongReact', 'WrongReact';
+'ModConLog', 'WrongReact';
 'ICSServ', 'ICSServ';
 'ICSMasq', 'ICSMasq';
 'SpoofComMes', 'SpoofComMes';
+'NewICS', 'SpoofComMes';
 'MITM', 'MITM';
-'MITM', 'ModComMes';
-'MITM', 'SpoofRepMes';
-'MITM', 'ModRepMes';
 'ModComMes', 'ModComMes';
+'MITM', 'ModComMes';
 'SpoofRepMes', 'SpoofRepMes';
+'MITM', 'SpoofRepMes';
 'ModRepMes', 'ModRepMes';
+'MITM', 'ModRepMes';
 'CorrReact', 'CorrReact';
 'NotCoherStatus', 'CorrReact';
-'NewICS', 'SpoofComMes'};
+};
 
 inter = mk_adj_mat(interc, names, 0);
 
@@ -275,7 +276,7 @@ clear cpt; clear cpt1;
 ec='JT';
 
 % ff=0 --> no fully factorized  OR ff=1 --> fully factorized
-ff=0;
+ff=1;
 
 % list of clusters
 if (ec=='JT')
@@ -304,7 +305,7 @@ evidence{bnet.names('SuspArgICS'),t+1}=2;
 t=7;
 evidence{bnet.names('CoherentDev'),t+1}=2; 
 % Campo Algoritmo di Inferenza  (filtering / smoothing)
-filtering=0;
+filtering=1;
 % filtering=0 --> smoothing (is the default - enter_evidence(engine,evidence))
 % filtering=1 --> filtering
 if ~filtering
