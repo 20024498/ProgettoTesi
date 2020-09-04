@@ -258,22 +258,6 @@ public class Model {
 		int initlen = init.length();
 		StringBuilder str = new StringBuilder (init);
 		
-		//boolean temp = false;
-		/*
-		for (int p : net.getAllNodes()) {
-			for (int c : net.getAllNodes()) {
-				if(net.temporalArcExists(p, c, 1)) {
-					str.append("'"+net.getNodeId(p)+"'");
-					str.append(", ");
-					str.append("'"+net.getNodeId(c)+"'");
-					str.append(";\n");
-					temp = true;
-				}	
-			}
-		}
-		
-		*/
-		
 		for (int h = net.getFirstNode(); h >= 0; h = net.getNextNode(h)) {
 			TemporalInfo[] tParents = {};
 			try {tParents = net.getTemporalParents(h, 1);
