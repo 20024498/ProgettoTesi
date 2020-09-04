@@ -487,19 +487,15 @@ public class Model {
 		
 	}
 	
-	public void saveFile(String fileName) {
+	public void saveFile(String fileName) throws IOException {
 		StringBuilder scriptName = new StringBuilder();
 		scriptName.append(fileName);
 		scriptName.append(".m");
 	    BufferedWriter writer;
-		try {
-			writer = new BufferedWriter(new FileWriter(scriptName.toString()));
-			writer.write(code.toString());
-		    writer.close();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}  
+		writer = new BufferedWriter(new FileWriter(scriptName.toString()));
+		writer.write(code.toString());
+		writer.close();
+		 
 	}
 	
 	private void setEvidence(String fileName, String caseName) throws ParserConfigurationException, SAXException, IOException {
@@ -564,7 +560,7 @@ public class Model {
 		}
 	}
 	
-	public void printInference(String fileName, String caseName, String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) {
+	public void printInference(String fileName, String caseName, String inferenceEngine, boolean fullyFactorized, int timeSpan, int timeStep, boolean filtering) throws ParserConfigurationException, SAXException, IOException {
 		
 		code.append("% choose the inference engine\n" + 
 				"ec='"+ inferenceEngine +"';\n" + 
@@ -591,13 +587,15 @@ public class Model {
 				"\n" + 
 				"% Evidence\n" + 
 				"% first cells of evidence are for time 0\n");  
-		try {
+		/*try {
 			setEvidence(fileName,caseName);
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 		
 			System.err.println("Impossibile parsificare il caso salvato su file");
 			e.printStackTrace();
-		}	
+		}	*/
+		
+		setEvidence(fileName, caseName);
 		
 		printEvidence();
 				

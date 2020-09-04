@@ -121,10 +121,25 @@ public class Controller {
 					model.netCreation();
 						
 					//INFERENZA
-					model.printInference(filePath,caseName,infEng,fullyfact,model.getNet().getSliceCount(),tStep,filtering);
+					try {
+						model.printInference(filePath,caseName,infEng,fullyfact,model.getNet().getSliceCount(),tStep,filtering);
+					} catch (ParserConfigurationException | SAXException | IOException e1) {
+						JOptionPane.showMessageDialog(view.getFrameProgramma(),
+							    "Impossibile Parsificare i casi di studio: "+ e1.getMessage(),
+							    "Errore",
+							    JOptionPane.ERROR_MESSAGE);
+						return;
+					}
 								
 					//FILE DI OUTPUT
-					model.saveFile("MatlabScript_"+model.extractFileName(filePath));
+					try {
+						model.saveFile("MatlabScript_"+model.extractFileName(filePath));
+					} catch (IOException e1) {
+						JOptionPane.showMessageDialog(view.getFrameProgramma(),
+							    "Impossibile Completare il salvataggio dello script: "+ e1.getMessage(),
+							    "Errore",
+							    JOptionPane.ERROR_MESSAGE);
+					}
 					System.out.println(model.getCode().toString());
 					
 					if(model.isHmm()) {
