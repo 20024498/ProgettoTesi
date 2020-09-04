@@ -139,12 +139,13 @@ public class Controller {
 							    "Impossibile Completare il salvataggio dello script: "+ e1.getMessage(),
 							    "Errore",
 							    JOptionPane.ERROR_MESSAGE);
+						return;
 					}
 					System.out.println(model.getCode().toString());
 					
 					if(model.isHmm()) {
 						JOptionPane.showMessageDialog(view.getFrameProgramma(),
-							    "Lo script '"+ "MatlabScript_"+model.extractFileName(filePath)+".m' è stato generato correttamente!");
+							    "Lo script '"+ "MatlabScript_"+model.extractFileName(filePath)+".m' è stato generato correttamente nella cartella /scripts !");
 					}
 					else {
 						JOptionPane.showMessageDialog(view.getFrameProgramma(),

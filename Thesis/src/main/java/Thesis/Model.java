@@ -492,7 +492,7 @@ public class Model {
 		scriptName.append(fileName);
 		scriptName.append(".m");
 	    BufferedWriter writer;
-		writer = new BufferedWriter(new FileWriter(scriptName.toString()));
+		writer = new BufferedWriter(new FileWriter(new File("scripts",scriptName.toString())));
 		writer.write(code.toString());
 		writer.close();
 		 
@@ -587,13 +587,6 @@ public class Model {
 				"\n" + 
 				"% Evidence\n" + 
 				"% first cells of evidence are for time 0\n");  
-		/*try {
-			setEvidence(fileName,caseName);
-		} catch (ParserConfigurationException | SAXException | IOException e) {
-		
-			System.err.println("Impossibile parsificare il caso salvato su file");
-			e.printStackTrace();
-		}	*/
 		
 		setEvidence(fileName, caseName);
 		
