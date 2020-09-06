@@ -1,13 +1,6 @@
 package Thesis;
 
 import java.awt.Color;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import org.apache.commons.text.StringEscapeUtils;
@@ -538,6 +531,29 @@ public class Model {
 
 	}
 	
+	public static String[] retrieveCases (String fileName) throws ParserConfigurationException, SAXException, IOException {
+		ArrayList<String> casesArrList = new ArrayList<String>();
+		File inputFile = new File(fileName);
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(inputFile);
+        doc.getDocumentElement().normalize();
+        NodeList caseList = doc.getElementsByTagName("case");
+       
+        for (int i = 0; i < caseList.getLength(); i++) {
+           Node caseNode = caseList.item(i);
+         
+           if (caseNode.getNodeType() == Node.ELEMENT_NODE) {
+               Element caseElement = (Element) caseNode;
+               casesArrList.add(caseElement.getAttribute("name"));
+               
+            }
+        
+        }
+        String[] cases = new String[casesArrList.size()];
+		return casesArrList.toArray(cases);
+	}
+	
 	private void printEvidence(){
 		
 		ArrayList<TemporalEvidence> evidences = new ArrayList<TemporalEvidence>();
@@ -720,8 +736,8 @@ public class Model {
 						code.append(":,");
 					int prod = 1;
 					for(int j=parents.length-1;j>=0;j--) {
-						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j])));//parents[j].handle
-						prod*=net.getOutcomeCount(parents[j]);//parents[j].handle
+						coords[j]=(((pIndex[j]++/prod)%net.getOutcomeCount(parents[j])));
+						prod*=net.getOutcomeCount(parents[j]);
 						
 					}
 					for(int k =0; k<parents.length;k++)
@@ -792,7 +808,6 @@ public class Model {
 			}
 			
 			private void printTempParentOrder(int nodeHandle) {
-				//%parent order:{SpoofComMes, NewICS}
 				code.append("%parent order:{");
 				boolean noParents = true;
 				
@@ -882,7 +897,7 @@ public class Model {
 				for(int i=0;i<bytesStr.length;i++)
 					bytes[i] = Byte.valueOf(bytesStr[i]); 
 					
-				return new smile.License(splitStr[0],bytes);	
+				return new License(splitStr[0],bytes);	
 			}
 			
 

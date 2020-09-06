@@ -82,7 +82,7 @@ public class Controller {
 					//CONTROLLO ESTENSIONE E RECUPERO CASI
 					try {
 						Model.checkExtension(filePath);
-						String [] cases = View.retrieveCases(filePath);
+						String [] cases = Model.retrieveCases(filePath);
 						view.getComboBox6().setModel(new DefaultComboBoxModel<String>(cases));
 					} catch (ParserConfigurationException | SAXException | IOException e1) {
 						JOptionPane.showMessageDialog(view.getFrameProgramma(),
