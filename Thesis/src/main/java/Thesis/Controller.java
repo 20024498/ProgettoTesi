@@ -30,6 +30,7 @@ public class Controller {
 		
 		//INIZIALIZZAZIONE PATH DELLA NATIVE LIBRARY
 		try {
+			view = new View();
 			Model.pathInit();
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
 			initError=true;
@@ -58,7 +59,6 @@ public class Controller {
 		
 		
 		if(initError==false) {
-			view = new View();
 			model = new Model();
 			listenersInit();
 		}
