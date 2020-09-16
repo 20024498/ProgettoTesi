@@ -903,7 +903,12 @@ public class Model {
 
 		
 		public String extractFileName (String filePath) {
-			String[] dirs = filePath.split("/");
+			String os = System.getProperty("os.name").toLowerCase();
+			String[] dirs;
+			if(os.indexOf("win") >= 0)
+				dirs = filePath.split("\\\\");
+			else
+				dirs = filePath.split("/");
 			StringBuilder fileName = new StringBuilder(dirs[dirs.length-1]);
 			fileName.setLength(fileName.length()-5);
 			return fileName.toString();
