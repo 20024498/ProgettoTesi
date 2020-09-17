@@ -45,7 +45,7 @@ public class View {
 	private void initialize() {
 		frameProgramma = new JFrame();
 		frameProgramma.setResizable(false);
-		frameProgramma.setTitle("Programma");
+		frameProgramma.setTitle("GASMan");
 		frameProgramma.setBounds(100, 100, 450, 620);
 		frameProgramma.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frameProgramma.getContentPane().setLayout(null);
