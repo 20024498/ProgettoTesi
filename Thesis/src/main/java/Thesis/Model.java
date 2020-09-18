@@ -422,7 +422,7 @@ public class Model {
 		printParentOrder(nodeHandle);
 		code.append("leak=");
 		double[] defs = net.getNodeDefinition(nodeHandle);
-		code.append(defs[defs.length-1]+";\n");
+		code.append(defs[defs.length-2]+";\n");
 		code.append("parents_dn={");
 		for(int p : net.getParents(nodeHandle))
 			code.append("'"+net.getNodeId(p)+"'"+", ");
