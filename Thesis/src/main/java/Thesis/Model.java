@@ -18,6 +18,7 @@ public class Model {
 	private StringBuilder code;
 	private boolean hmm;
 	private String hmmError;
+	private boolean noisyOr;
 	
 	public Model() {
 		this.filePath = "";
@@ -25,6 +26,7 @@ public class Model {
 		this.code = new StringBuilder();
 		this.hmm=true;
 		this.hmmError="";
+		this.noisyOr = false;
 		
 	}
 	
@@ -417,7 +419,7 @@ public class Model {
 	}
 	
 	private void printNoisyOr(int nodeHandle) {
-		
+		/*
 		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
 		printParentOrder(nodeHandle);
 		code.append("leak=");
@@ -436,7 +438,9 @@ public class Model {
 		code.append("inh_prob1=mk_named_noisyor(bnet.names('"+net.getNodeId(nodeHandle)+"'),parents_dn,names,bnet.dag,inh_prob);\n");
 		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=noisyor_CPD(bnet, bnet.names('"+net.getNodeId(nodeHandle)+"'),leak, inh_prob1);\n");
 		code.append("clear inh_prob inh_prob1 leak;\n\n");
-		
+		*/
+		noisyOr = true;
+		printNoisyMax(nodeHandle);
 	}
 	
 	private void printNoisyMax(int nodeHandle) {
@@ -943,6 +947,10 @@ public class Model {
 
 		public String getHmmError() {
 			return hmmError;
+		}
+
+		public boolean isNoisyOr() {
+			return noisyOr;
 		}
 		
 		

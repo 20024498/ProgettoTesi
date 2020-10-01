@@ -154,6 +154,12 @@ public class Controller {
 							    JOptionPane.WARNING_MESSAGE);
 					}
 						
+					if(model.isNoisyOr()) {
+						JOptionPane.showMessageDialog(view.getFrameProgramma(),
+							    "Attenzione la rete inserita contiene un noisy-OR, durante la traduzione è il nodo è stato convertito in un nodo semplice",
+							    "Attenzione",
+							    JOptionPane.WARNING_MESSAGE);
+					}
 				}
 				
 				else {
