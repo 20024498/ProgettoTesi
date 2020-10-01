@@ -56,30 +56,38 @@ public class Model {
 		}
 		
 		//INSIEME DEI NOMI
+		code.append("%Array containing each node name \n");
 		code.append("names=[h_states, obs];\n\n");
 		
 		//NUMERO DI NODI
+		code.append("%Number of nodes \n");
 		code.append("n=length(names);\n\n");
 		
 		//ARCHI INTRASLICE
 		intrasliceArcs();
 		
 		//MATRICE DI ADIACENZA ARCHI INTRASLICE
+		code.append("%Making intraslice adjiacent matrix\n");
 		code.append("[intra, names] = mk_adj_mat(intrac, names, 1);\n\n");
 		
 		//ARCHI INTERSLICE (SOLO ORDINE 1)
 		intersliceArcs();
 		
 		//MATRICE DI ADIACENZA ARCHI INTERSLICE
+		code.append("%Making interslice adjiacent matrix\n");
 		code.append("inter = mk_adj_mat(interc, names, 0);\n\n");
 		
 		//NUMERO DI STATI DI CIASCUN NODO
 		numberOfStates();
 	
 		//CREAZIONE RETE BAYESIANA
+		code.append("% Creating the DBN\n");
 		code.append("bnet = mk_dbn(intra, inter, ns, 'names', names);\n\n");
 		
 		//CREAZIONE LISTE NODI DI CUI CALCOLARE CPD
+		code.append("% Creating the CPDs\n\n");
+		code.append("\n\n%%%%%%%%% ------- slice 1\n\n");
+		
 		ArrayList<Integer> tempNodes = new ArrayList<Integer>();
 		ArrayList<Integer> cpdNodes = new ArrayList<Integer>();
 		cpdNodesCalc(hStates, obs, cpdNodes, tempNodes);
@@ -162,6 +170,7 @@ public class Model {
 	
 	
 	private ArrayList<Integer> hiddenVariables(){
+		code.append("%Hidden variables\n");
 		ArrayList<Integer> hStates = new ArrayList<Integer>();
 		String init = "h_states = {";
 		StringBuilder str = new StringBuilder (init);
@@ -184,6 +193,7 @@ public class Model {
 	}
 	
 	private ArrayList<Integer> observableVariables(){
+		code.append("%Observable variables\n");
 		ArrayList<Integer> obs = new ArrayList<Integer>();
 		String init = "obs = {";
 		StringBuilder str = new StringBuilder (init);
@@ -227,6 +237,7 @@ public class Model {
 	
 	private void intrasliceArcs() {
 		
+		code.append("%Intraslice edges\n");
 		String init = "intrac = {";
 		StringBuilder str = new StringBuilder (init);
 		
@@ -249,6 +260,7 @@ public class Model {
 	
 	private void intersliceArcs() {
 		
+		code.append("%Interslice edges\n");
 		String init = "interc = {";
 		int initlen = init.length();
 		StringBuilder str = new StringBuilder (init);
@@ -278,6 +290,7 @@ public class Model {
 	
 	private void numberOfStates () {
 		
+		code.append("% Number of states (ns(i)=x means variable i has x states)\n");
 		String init = "ns = [";
 		StringBuilder str = new StringBuilder (init);
 
@@ -604,9 +617,9 @@ public class Model {
 				"	end\n" + 
 				"end\n" + 
 				"\n" + 
-				"% IMPORTANT: DrawNet start slices from 0,\n" + 
-				"T="+timeSpan+"; %max time span (from XML file campo Time Slice) thus from 0 to T-1\n" + 
-				"tStep="+timeStep+"; %from  XML file campo Time Step\n" + 
+				"% IMPORTANT: GeNIe start slices from 0,\n" + 
+				"T="+timeSpan+"; %max time span thus from 0 to T-1\n" + 
+				"tStep="+timeStep+"; %Time Step\n" + 
 				"evidence=cell(n,T); % create the evidence cell array\n" + 
 				"\n" + 
 				"% Evidence\n" + 
@@ -616,7 +629,7 @@ public class Model {
 		
 		printEvidence();
 				
-		code.append("% Campo Algoritmo di Inferenza  (filtering / smoothing)\n" + 
+		code.append("% Inference algorithm (filtering / smoothing)\n" + 
 				"filtering="+((filtering==true)?"1":"0")+";\n" + 
 				"% filtering=0 --> smoothing (is the default - enter_evidence(engine,evidence))\n" + 
 				"% filtering=1 --> filtering\n" + 
@@ -655,7 +668,7 @@ public class Model {
 				"end\n" + 
 				"\n" + 
 				"% Printing results\n" + 
-				"% IMPORTANT: To be consistent with DrawNet we start counting/printing time slices from 0\n" + 
+				"% IMPORTANT: To be consistent with GeNIe we start counting/printing time slices from 0\n" + 
 				"\n" + 
 				"\n" + 
 				"% Anterior nodes are printed from t=1 to T-1\n" + 
