@@ -143,6 +143,13 @@ public class Controller {
 					}
 					System.out.println(model.getCode().toString());
 					
+					if(model.isNoisyOr()) {
+						JOptionPane.showMessageDialog(view.getFrameProgramma(),
+							    "Attenzione la rete inserita contiene un noisy-OR, durante la traduzione è il nodo è stato convertito in un nodo semplice",
+							    "Attenzione",
+							    JOptionPane.WARNING_MESSAGE);
+					}
+					
 					if(model.isHmm()) {
 						JOptionPane.showMessageDialog(view.getFrameProgramma(),
 							    "Lo script '"+ "MatlabScript_"+model.extractFileName(filePath)+".m' è stato generato correttamente nella cartella /scripts !");
@@ -154,12 +161,6 @@ public class Controller {
 							    JOptionPane.WARNING_MESSAGE);
 					}
 						
-					if(model.isNoisyOr()) {
-						JOptionPane.showMessageDialog(view.getFrameProgramma(),
-							    "Attenzione la rete inserita contiene un noisy-OR, durante la traduzione è il nodo è stato convertito in un nodo semplice",
-							    "Attenzione",
-							    JOptionPane.WARNING_MESSAGE);
-					}
 				}
 				
 				else {
