@@ -86,7 +86,7 @@ public class Model {
 		
 		//CREAZIONE LISTE NODI DI CUI CALCOLARE CPD
 		code.append("% Creating the CPDs\n\n");
-		code.append("\n\n%%%%%%%%% ------- slice 1\n\n");
+		code.append("%%%%%%%%% ------- slice 1 -------\n\n");
 		
 		ArrayList<Integer> tempNodes = new ArrayList<Integer>();
 		ArrayList<Integer> cpdNodes = new ArrayList<Integer>();
@@ -97,7 +97,7 @@ public class Model {
 		for(int i =0; i<cpdNodes.size();i++) {
 			
 			if(i==tresh)
-				code.append("\n\n%%%%%%%%% ------- slice 2\n\n");
+				code.append("%%%%%%%%% ------- slice 2 --------\n\n");
 			
 			int h = cpdNodes.get(i);
 			
@@ -331,8 +331,15 @@ public class Model {
 		code.append("%node "+net.getNodeName(nodeHandle)+"(id="+ net.getNodeId(nodeHandle)+")"+" slice 1 \n");
 		printParentOrder(nodeHandle);
 		myCpdPrint(nodeHandle);
-		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'CPT',cpt);\n");
-		code.append("clear cpt;\n\n");	
+		int nParents = net.getParents(nodeHandle).length;
+		boolean moreParents = nParents>1;
+		if(moreParents)
+			cpt1Print(nodeHandle);
+		code.append("bnet.CPD{bnet.names('"+net.getNodeId(nodeHandle)+"')}=tabular_CPD(bnet,bnet.names('"+net.getNodeId(nodeHandle)+"'),'CPT',"+(moreParents?"cpt1":"cpt")+");\n");
+		code.append("clear cpt;");
+		if(moreParents) 
+			code.append("clear cpt1;");
+		code.append("\n\n");
 	}
 	
 	private void printTempTabularCpd(int nodeHandle) {
@@ -343,7 +350,7 @@ public class Model {
 		int nParents = net.getTemporalParents(nodeHandle, 1).length + net.getParents(nodeHandle).length;
 		boolean moreParents = nParents>1;
 		if(moreParents)
-			cpt1Print(nodeHandle);
+			tempCpt1Print(nodeHandle);
 		code.append("bnet.CPD{bnet.eclass2(bnet.names('"+net.getNodeId(nodeHandle)+"'))}=tabular_CPD(bnet,n+bnet.names('"+net.getNodeId(nodeHandle)+"'),'CPT',"+(moreParents?"cpt1":"cpt")+");\n");
 		code.append("clear cpt; ");
 		if(moreParents) 
@@ -351,8 +358,8 @@ public class Model {
 		code.append("\n\n");
 	}
 	
+
 	
-	//l'output corrispondente allo stato falso deve essere messo per primo
 	private boolean checkAND(int h) {
 		if(net.getOutcomeCount(h)>2)
 			return false;
@@ -377,7 +384,6 @@ public class Model {
 	
 	
 	
-	//l'output corrispondente allo stato falso deve essere messo per primo
 	private boolean checkOR(int h) {
 		if(net.getOutcomeCount(h)>2)
 			return false;
@@ -770,6 +776,17 @@ public class Model {
 		}
 			
 			private void cpt1Print(int nodeHandle){
+				
+				int[] parents = net.getParents(nodeHandle);
+				code.append("cpt1=mk_named_CPT({");
+				for(int p : parents) 
+					code.append("'"+net.getNodeId(p)+"', ");
+				
+				code.append("'"+net.getNodeId(nodeHandle)+"'");
+				code.append("},names, bnet.dag, cpt);\n");
+			}	
+			
+			private void tempCpt1Print(int nodeHandle){
 				int[] parents = net.getParents(nodeHandle);
 				TemporalInfo[] tParents = net.getTemporalParents(nodeHandle, 1); 
 				ArrayList<Integer> parentsList = new ArrayList<Integer>();
