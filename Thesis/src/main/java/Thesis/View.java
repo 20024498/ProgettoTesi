@@ -10,6 +10,7 @@ import javax.swing.JTextField;
 
 public class View {
 
+	private String version  = "0.1";
 	private JFrame frameProgramma;
 	private JTextField pathTextField;
 	private JPanel panelPrincipale;
@@ -45,7 +46,7 @@ public class View {
 	private void initialize() {
 		frameProgramma = new JFrame();
 		frameProgramma.setResizable(false);
-		frameProgramma.setTitle("GASMan");
+		frameProgramma.setTitle("GASMan Ver." + version);
 		frameProgramma.setBounds(100, 100, 450, 620);
 		frameProgramma.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frameProgramma.getContentPane().setLayout(null);
